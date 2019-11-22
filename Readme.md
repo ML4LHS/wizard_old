@@ -6,17 +6,24 @@ transformation tool intended for use with machine learning applications.
 
 Features:
 
-  - Windowed summaries - Downsampling method for
+  - Windowed summaries
+  - Lag predictions
+  - Outcomes
 
 # Installation
 
 ``` r
 # install.packages("devtools")
-library("devtools")
-devtools::install_github("seameyer-umich/wisard")
+devtools::install_github("smeyer-umich/wisard", auth_token = "725cd269dcfd0b64fdeb5aa51a3e0a52193fdd3c")
 ```
 
 # Quick Start
+
+``` r
+# wisard::create_wisard(file = "./inst/extdata/temporal_data.csv", fixed_data = "./inst/extdata/fixed_data.csv", window_size = 6, lookback = 48, lookahead = 0, feature_stat = list(labs = c("min", "max", "median", "mean", "IQR", "sd", "range")), outcome_var = "NIBP Sys", outcome_stat = list("mean", "min", "max"), lag = TRUE, impute = TRUE, write_file = "./inst/extdata/output.csv")
+```
+
+# Supplemental
 
 ## Temporal Data Format
 
