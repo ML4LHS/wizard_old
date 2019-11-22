@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
-temporal_data = dplyr::tibble(patient_id = sample(openssl::md5(101:102 %>% as.character()) %>% toupper(), 1000, replace = TRUE),
+temporal_data = dplyr::tibble(patient_id = sample(openssl::md5(101:200 %>% as.character()) %>% toupper(), 1000, replace = TRUE),
                          encounter_id = sample(openssl::md5(1:4 %>% as.character()) %>% toupper(), 1000, replace = TRUE),
                          variable = sample(c('NIBP Sys', 'NIBP Dias', 'NIBP Pulse Rate', 'NIBP Pulse Ox', 'SpO2'), 1000, replace = TRUE),
                          time = sample(seq(lubridate::as_datetime('2019/04/01'), lubridate::as_datetime('2019/04/10'), by="min"), 1000),
