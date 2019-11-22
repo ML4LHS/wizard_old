@@ -1,0 +1,45 @@
+---
+title: "Generate Vignette Data"
+author: "Sean Meyer"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+temporal_data = dplyr::tibble(patient_id = sample(openssl::md5(101:102 %>% as.character()) %>% toupper(), 1000, replace = TRUE),
+                         encounter_id = sample(openssl::md5(1:4 %>% as.character()) %>% toupper(), 1000, replace = TRUE),
+                         variable = sample(c('NIBP Sys', 'NIBP Dias', 'NIBP Pulse Rate', 'NIBP Pulse Ox', 'SpO2'), 1000, replace = TRUE),
+                         time = sample(seq(lubridate::as_datetime('2019/04/01'), lubridate::as_datetime('2019/04/10'), by="min"), 1000),
+                         # DeliveryDate = sample(seq(lubridate::as_datetime('2019/04/01'), lubridate::as_datetime('2019/04/2'), by="min"), 1000),
+                         value = rnorm(1000, 100, 25) %>% round(0)) %>% 
+  unique() %>% 
+  # generate outcome time and replace the last reading with the intervention
+  dplyr::group_by(patient_id, encounter_id) %>% 
+  add_column(category = "vitals") %>% 
+  # dplyr::mutate(interventionTime = max(ObservationDate)) %>% 
+  # dplyr::filter(interventionTime > ObservationDate) %>% 
+  dplyr::select(patient_id, encounter_id, time, category, variable, value)
+
+temporal_data %>% 
+  readr::write_csv("../inst/extdata/temporal_data.csv")
+
+fixed_data = temporal_data %>% 
+  dplyr::group_by(patient_id, encounter_id) %>% 
+  dplyr::summarize(admit_time = min(time), outcome = max(time))
+
+fixed_data %>% 
+  readr::write_csv("../inst/extdata/fixed_data.csv")
+
+```
+

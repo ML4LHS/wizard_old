@@ -1,0 +1,18 @@
+#' Unique variables
+#'
+#' Function to generate the column names to write to the file system.
+#'
+#' @param data data
+#' @return list of variables
+#' @export
+
+unique_variables =  function (data){
+  print("here")
+
+  data %>%
+    dplyr::group_by(variable) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(variable,category)
+
+}

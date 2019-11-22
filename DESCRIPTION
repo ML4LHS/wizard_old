@@ -1,0 +1,27 @@
+Package: wisard
+Title: WIndows Summarization for Auto Regressive Data preparation
+Version: 0.0.0.1000
+Authors@R: 
+    person(given = "Adharsh",
+           family = "Murali",
+           role = c("aut", "cre"),
+           email = "adharsh@umich.edu")
+    person(given = "Sean",
+           family = "Meyer",
+           role = c("aut", "cre"),
+           email = "seameyer@umich.edu")
+Description: Provides ability to downsample time series data into windowed increments and create lag predictors.
+License: License
+Encoding: UTF-8
+LazyData: true
+Imports:
+	tidyverse (>= 1.2.1),
+	disk.frame (>= 0.2.1),
+	zoo (>= 1.8-6),
+	forcats (>= 0.4.0),
+	data.table (>= 1.12.6)
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 6.1.1.9000

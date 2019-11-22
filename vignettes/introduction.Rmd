@@ -1,0 +1,98 @@
+---
+title: "Introduction"
+author: "Adharsh Murali"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Installation
+
+```{r}
+
+# install.packages("devtools")
+library("devtools")
+devtools::install_github("seameyer-umich/wisard")
+
+```
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+
+library(tidyverse, quietly = TRUE)
+devtools::load_all()
+
+```
+
+# 1) Load in the fixed data and temporal data
+
+```{r}
+
+
+temporal_file = system.file("../inst/extdata", "temporal_data.csv", package = "wisard")
+fixed_file = system.file("../inst/extdata", "fixed_data.csv", package = "wisard")
+
+temporal_data_1 =  data.table::fread(temporal_file) %>% 
+  dplyr::mutate(time = time %>% lubridate::as_datetime())
+# The fixed data should of type tibble or data.frame or disk frame.
+fixed_data = data.table::fread(fixed_file) %>% 
+  dplyr::mutate(time = admit_time %>% lubridate::as_datetime(), outcome = outcome %>% lubridate::as_datetime()) %>% 
+  as.data.frame()
+
+```
+
+# 2) Generating the categorical column names. 
+
+```{r}
+# input temporal_dataframe and the return is also a temporal_data frame.
+# The function columns the categorical columns as a variable with a binary value.
+temporal_data_2 = wisard::categorical_col_names_generator(temporal_data = temporal_data_1)
+
+temporal_data_2
+```
+
+# 3) Identifying the unique variables in the temporal dataset.
+
+```{r}
+# The input parameter is the temporal dataframe and the output is unique variables and their categories
+unique_columns = wisard::unique_variables(data = temporal_data_1)
+unique_columns
+```
+
+# 4) Calling in the date_to_time function to convert the timestamps in the temporal data to Number relative to the admit time or initial time.
+
+```{r}
+# To convert the user argument which is a period object to a numeric value. It returns a list of values.
+period_measure = wisard::hour_to_number(window_size = lubridate::hours(6),lookback = lubridate::hours(48),lookahead = lubridate::hours(48))
+# The input parameters are:
+#1)temporal_data
+#2) Fixed data frame
+#3) units : unit of the period object for eg.in hours(6) the unit is hours and seconds(6) unit is seconds.
+temporal_data = wisard::date_to_time(temporal_data = temporal_data_1, fixed_data = fixed_data, units = period_measure$units)
+```
+
+# 4) Generating the column names based on user specified summary stats.
+
+```{r}
+# The input parameters are:
+#1) temporal dataframe.
+#2) feature stat based on category
+column_names = wisard::colnames_generator(temporal_data = temporal_data,feature_stat = list(vitals = c("min","mean", "max"),meds = c("n")) )
+# returns a list of column names
+all_variable_to_create = column_names[[1]]
+```
+
+
+# 5) Finally calling in the lagged feature generation function.
+
+```{r}
+result_frame = wisard::dummy_wisard(temporal_data = temporal_data,all_variable_to_create = all_variable_to_create,window_size = period_measure$window_size,outcome_var = NULL,outcome_stat = list("min"),lookahead = period_measure$lookahead,lookback = period_measure$lookback)
+```
