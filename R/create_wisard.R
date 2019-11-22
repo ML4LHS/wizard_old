@@ -52,7 +52,6 @@ create_wisard =  function(
   print("Finished generating categorical names")
   disk.frame::delete(dev_data)
 
-
   # Function to convert the period object to number
 
   if (tolower(class(lookback)[1]) == "period" & tolower(class(lookahead)[1]) == "period" & tolower(class(window_size)[1]) == "period"){
