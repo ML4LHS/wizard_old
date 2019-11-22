@@ -2,7 +2,7 @@
 title: "Introduction"
 author: "Adharsh Murali"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::github_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -32,8 +32,8 @@ knitr::opts_chunk$set(
 ```{r}
 library(tidyverse, quietly = TRUE)
 
-temporal_file = system.file("../inst/extdata", "temporal_data.csv", package = "wisard")
-fixed_file = system.file("../inst/extdata", "fixed_data.csv", package = "wisard")
+temporal_file = file.path("./inst/extdata/temporal_data.csv")
+fixed_file = file.path("./inst/extdata/fixed_data.csv")
 
 temporal_data =  data.table::fread(temporal_file) %>% 
   dplyr::mutate(time = time %>% lubridate::as_datetime())
