@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # WIndowed Summarization for Auto Regressive Data (WISARD)
 
 The intended purpose for this package is 
@@ -15,4 +16,3 @@ devtools::install_github("seameyer-umich/wisard")
 
 
 ## Data format
-
