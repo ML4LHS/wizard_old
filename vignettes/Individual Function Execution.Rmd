@@ -32,8 +32,8 @@ knitr::opts_chunk$set(
 ```{r}
 library(tidyverse, quietly = TRUE)
 
-temporal_file = file.path("./inst/extdata/temporal_data.csv")
-fixed_file = file.path("./inst/extdata/fixed_data.csv")
+temporal_file = file.path("../inst/extdata/temporal_data.csv")
+fixed_file = file.path("../inst/extdata/fixed_data.csv")
 
 temporal_data =  data.table::fread(temporal_file) %>% 
   dplyr::mutate(time = time %>% lubridate::as_datetime())
