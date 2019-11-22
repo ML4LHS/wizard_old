@@ -1,0 +1,39 @@
+---
+title: "WIndowed Summarization for Auto Regressive Data (WISARD)"
+output: rmarkdown::github_document
+---
+
+The purpose for this package is to provide an all in one data transformation tool intended for use with machine learning applications.
+
+Features:
+
+- Windowed summaries - Downsampling method for 
+
+# Installation
+
+```{r eval = FALSE}
+# install.packages("devtools")
+library("devtools")
+devtools::install_github("seameyer-umich/wisard")
+```
+
+# Quick Start
+
+```{r setup, include = FALSE}
+library(tidyverse, quietly = TRUE)
+```
+
+## Temporal Data Format
+
+```{r}
+read_csv("./inst/extdata/temporal_data.csv") %>% 
+  head()
+```
+
+## Fixed Data Format
+
+```{r}
+read_csv("./inst/extdata/fixed_data.csv") %>% 
+  head()
+```
+
