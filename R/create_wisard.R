@@ -40,7 +40,7 @@ create_wisard =  function(
                                   shardby = "encounter_id",
                                   backend = "data.table")
   }
-
+print("Did this portion actually run")
   # Function call to invoke the categorical column name generator
   final_data = disk.frame::as.disk.frame(map(dev_data, ~ wisard::categorical_col_names_generator(temporal_data = .),
                                               lazy = F) %>%
