@@ -42,7 +42,7 @@ create_wisard =  function(
   }
 
   # Function call to invoke the categorical column name generator
-  final_data = disk.frame::csv_to_disk.frame(map(dev_data, ~ wisard::categorical_col_names_generator(temporal_data = .),
+  final_data = disk.frame::as.disk.frame(map(dev_data, ~ wisard::categorical_col_names_generator(temporal_data = .),
                                               lazy = F) %>%
                                             dplyr::bind_rows(),
                                           outdir = "tmp",
