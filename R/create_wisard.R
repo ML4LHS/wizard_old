@@ -104,8 +104,9 @@ create_wisard =  function(
 
   print("Calling in the main function")
   if(is.null(write_file)){
-
-    result_data = map(final_data, ~ wisard::dummy_wisard(temporal_data = .,
+    df_path = file.path(tempdir(), "tmp_add_chunk")
+    result_data = disk.frame::disk.frame(df_path)
+    disk.frame::add_chunk(result_data,map(final_data, ~ wisard::dummy_wisard(temporal_data = .,
                                                  all_variable_to_create = all_variable_to_create,
                                                  lag_variable_to_create = lag_variable_to_create,
                                                  window_size = window_size,
@@ -113,8 +114,7 @@ create_wisard =  function(
                                                  lookahead = lookahead,
                                                  lag = lag,
                                                  outcome_var = outcome_var ,
-                                                 impute = impute), lazy = F) %>%
-      dplyr::bind_rows()
+                                                 impute = impute), lazy = F)) 
 
     result_data = result_data %>%
       dplyr::arrange(encounter_id, time)
@@ -126,13 +126,14 @@ create_wisard =  function(
                                        shardby = "encounter_id",
                                        backend = "data.table")
         result_data = fixed_data %>%
-          dplyr::inner_join(result_data,
+          disk.frame::inner_join.disk.frame(result_data,
                      by = "encounter_id")
         return(result_data)
       }
       if (class(fixed_data) %in% c("data.frame","tibble","data.table","disk.frame")){
+        fixed_data = as.disk.frame(fixed_data)
         result_data = fixed_data %>%
-          dplyr::inner_join(result_data,
+          disk.frame::inner_join.disk.frame(result_data,
                      by = "encounter_id")
         return(result_data)
       }
@@ -144,7 +145,8 @@ create_wisard =  function(
   }
   else
   {
-    result_data = map(final_data, ~ wisard::dummy_wisard(temporal_data = .,
+    result_data = disk.frame::disk.frame(write_file)
+    disk.frame::add_chunk(result_data,map(final_data, ~ wisard::dummy_wisard(temporal_data = .,
                                                  all_variable_to_create = all_variable_to_create,
                                                  lag_variable_to_create = lag_variable_to_create,
                                                  window_size = window_size,
@@ -152,8 +154,7 @@ create_wisard =  function(
                                                  lookahead = lookahead,
                                                  lag = lag,
                                                  outcome_var = outcome_var ,
-                                                 impute = impute), lazy = F) %>%
-      dplyr::bind_rows()
+                                                 impute = impute), lazy = F))
 
     result_data = result_data %>%
       dplyr::arrange(encounter_id, time)
@@ -166,23 +167,23 @@ create_wisard =  function(
                                        shardby = "encounter_id",
                                        backend = "data.table")
         result_data = fixed_data %>%
-          dplyr::inner_join(result_data,
+          disk.frame::inner_join.disk.frame(result_data,
                      by = "encounter_id")
         # return(result_data)
-        data.table::fwrite(result_data, write_file)
+        #data.table::fwrite(result_data, write_file)
       }
       if (class(fixed_data) %in% c("data.frame","tibble","data.table","disk.frame")){
         result_data = fixed_data %>%
-          dplyr::inner_join(result_data,
+          disk.frame::inner_join.disk.frame(result_data,
                      by = "encounter_id")
         # return(result_data)
-        data.table::fwrite(result_data, write_file)
+       # data.table::fwrite(result_data, write_file)
       }
     }
     else{
-
+  print("Final condition where write file is not present")
       #return (result_data)
-      data.table::fwrite(result_data, write_file)
+      #data.table::fwrite(result_data, write_file)
     }
   }
 
