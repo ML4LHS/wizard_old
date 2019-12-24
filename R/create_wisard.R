@@ -101,7 +101,7 @@ create_wisard =  function(
   print(final_data %>% class())
   
   column_names_df = dplyr::bind_rows( column_names_df,
-                                      map(final_data, ~unique_variables(.), lazy = F) %>% head()
+                                      map(final_data, ~wisard::unique_variables(.), lazy = F) %>% head()
   )
   print(" Generating the unique names")
   column_names_df = column_names_df %>%
