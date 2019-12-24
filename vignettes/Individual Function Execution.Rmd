@@ -71,7 +71,7 @@ unique_columns
 
 ```{r}
 # To convert the user argument which is a period object to a numeric value. It returns a list of values.
-period_measure = wisard::hour_to_number(window_size = lubridate::hours(6),lookback = lubridate::hours(48),lookahead = lubridate::hours(48))
+period_measure = wisard::hour_to_number(window_size = lubridate::hours(6),lookback = lubridate::hours(48),lookahead = lubridate::hours(48),step = hours(3))
 # The input parameters are:
 #1)temporal_data
 #2) Fixed data frame
@@ -85,7 +85,17 @@ temporal_data = wisard::date_to_time(temporal_data = temporal_data, fixed_data =
 # The input parameters are:
 #1) temporal dataframe.
 #2) feature stat based on category
-column_names = wisard::colnames_generator(temporal_data = temporal_data, feature_stat = list(vitals = c("min","mean", "max"),meds = c("n")) )
+column_names = wisard::colnames_generator(temporal_data,
+                               feature_stat = list(labs = c('min', 'mean', 'max'),
+                                                   meds = ('min')
+                               ),
+                               lag_display = list("meds" = T,"labs" = T),
+                               lag_compute = list("meds" = c("both"),
+                                                  "labs" = c("prop")),
+                               #lagged_feature_stat = list(labs = c('min', 'mean')),
+                               
+                               lookback = list("meds" = hours(7),"labs" = hours(48)),
+                               window_size = list("meds" = hours(1),"labs" = hours(6)) )
 # returns a list of column names
 all_variable_to_create = column_names[[1]]
 ```
@@ -94,6 +104,8 @@ all_variable_to_create = column_names[[1]]
 # 5) Finally calling in the lagged feature generation function.
 
 ```{r}
-result_frame = wisard::dummy_wisard(temporal_data = temporal_data,all_variable_to_create = all_variable_to_create,window_size = period_measure$window_size,outcome_var = NULL,outcome_stat = list("min"),lookahead = period_measure$lookahead,lookback = period_measure$lookback)
+
+result_frame = wisard::dummy_wisard(temporal_data = temporal_data,all_variable_to_create = all_variable_to_create,lag_variable_to_create = lag_variable_to_create,window_size = period_measure$window_size,outcome_var = NULL,outcome_stat = list("min"),lookahead = period_measure$lookahead,lookback = period_measure$lookback,step = period_measure$step,lag_display = list("meds" = T,"labs" = T),
+lag_comp = list("meds" = "both", "labs" = "prop"),recent_only = T,impute = T)
 result_frame %>% head()
 ```
