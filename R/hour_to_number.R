@@ -160,33 +160,39 @@ hour_to_number = function(window_size = NULL,lookback =NULL,lookahead = NULL, st
           window_size = lapply(window_size,function(x) {lubridate::period_to_seconds(x)/(3600*24*7*365)})
           lookback = lapply(lookback,function(x) {lubridate::period_to_seconds(x)/(3600*24*7*365)})
           lookahead =lubridate::period_to_seconds(lookahead)/(3600*24*7*365)
+          step = lubridate::period_to_seconds(step)/(3600*24*7*365)
         }
 
         if (units == "weeks"){
           window_size = lapply(window_size, function(x) {lubridate::period_to_seconds(x)/(3600*24*7)})
           lookback = lapply(lookback, function(x) {lubridate::period_to_seconds(x)/(3600*24*7)})
           lookahead = lubridate::period_to_seconds(lookahead)/(3600*24*7)
+          step = lubridate::period_to_seconds(step)/(3600*24*7)
         }
         if (units == "days"){
           window_size = lapply(window_size,function(x) {lubridate::period_to_seconds(x)/(3600*24)})
           lookback = lapply(lookback, function(x) { lubridate::period_to_seconds(x)/(3600*24)})
           lookahead = lubridate::period_to_seconds(lookahead)/(3600*24)
+          step = lubridate::period_to_seconds(step)/(3600*24)
         }
 
         if (units == "hours"){
           window_size = lapply(window_size, function(x) {lubridate::period_to_seconds(x)/3600})
           lookback = lapply(lookback, function(x) {lubridate::period_to_seconds(x)/(3600)})
           lookahead = lubridate::period_to_seconds(lookahead)/(3600)
+          step = lubridate::period_to_seconds(step)/(3600)
         }
         if (units == "mins"){
           window_size = lapply( window_size, function(x){lubridate::period_to_seconds(x)/60})
           lookback = lapply(lookback, function(x) {lubridate::period_to_seconds(x)/(60)})
           lookahead = lubridate::period_to_seconds(lookahead)/(60)
+          step = lubridate::period_to_seconds(step)/(60)
         }
         if (units == "secs"){
           window_size = lapply(window_size, function(x) {lubridate::period_to_seconds(x)})
           lookback = lapply(lookback, function(x) {lubridate::period_to_seconds(x)})
           lookahead = lubridate::period_to_seconds(lookahead)
+          step = lubridate::period_to_seconds(step)
         }
       }
     else{
@@ -198,8 +204,10 @@ hour_to_number = function(window_size = NULL,lookback =NULL,lookahead = NULL, st
     stop("Please fill in the lookback,lookahead,window size,and step arguments of the function.")
   }
 
-  return(list("units" = units, "lookback" = lookback, "lookahead" = lookahead , "window_size" = window_size))
+  
+  return(list("units" = units, "lookback" = lookback, "lookahead" = lookahead , "window_size" = window_size,"step"=step))
 }
+
 
 
 
