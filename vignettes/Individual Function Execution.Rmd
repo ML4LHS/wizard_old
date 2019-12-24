@@ -108,3 +108,26 @@ result_frame = wisard::dummy_wisard(temporal_data = temporal_data,all_variable_t
 lag_comp = list("meds" = "both", "labs" = "prop"),recent_only = T,impute = T)
 result_frame %>% head()
 ```
+
+#  Function to create a disk frame with lagged features.
+
+```{r}
+
+result = create_wisard(file = "a://b/c/d.csv",fixed_data = fixed_data,
+                       window_size = list("meds" = 6,"labs" = 6),
+                      lookback = list("meds" = 6, labs = 48),
+                      lookahead = 30,
+                      step = 3,
+                     feature_stat = list(labs = c('min', 'mean', 'max'),
+                      meds = ('min')),
+                     lag_display = list("meds" = T, "labs" = T),
+                     recent_only = F,
+                     lag_comp = list("meds" = "both", "labs" = "prop"),
+                     outcome_var = NULL,
+                     outcome_stat = list("mean","min",",max"),
+                     impute = T,
+  write_file = NULL)
+
+
+```
+
