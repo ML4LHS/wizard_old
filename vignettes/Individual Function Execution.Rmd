@@ -104,7 +104,6 @@ all_variable_to_create = column_names[[1]]
 # 5) Finally calling in the lagged feature generation function.
 
 ```{r}
-
 result_frame = wisard::dummy_wisard(temporal_data = temporal_data,all_variable_to_create = all_variable_to_create,lag_variable_to_create = lag_variable_to_create,window_size = period_measure$window_size,outcome_var = NULL,outcome_stat = list("min"),lookahead = period_measure$lookahead,lookback = period_measure$lookback,step = period_measure$step,lag_display = list("meds" = T,"labs" = T),
 lag_comp = list("meds" = "both", "labs" = "prop"),recent_only = T,impute = T)
 result_frame %>% head()
