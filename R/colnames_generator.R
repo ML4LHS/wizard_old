@@ -15,7 +15,7 @@ colnames_generator = function( temporal_data,
                                feature_stat = list(labs = c('min', 'mean', 'max'),
                                                    meds = ('min')
                                ),
-                               lag_display = T,
+                               lag_display = list("meds" = T,"labs" = T),
                                lag_compute = list("meds" = c("both"),
                                                   "labs" = c("prop")),
                                #lagged_feature_stat = list(labs = c('min', 'mean')),
@@ -31,10 +31,13 @@ colnames_generator = function( temporal_data,
        distinct(category) %>%
        pull(1)){
     max_lag = lookback[[j]] %/% window_size[[j]]
-    if(lag_display){
-      
+    print(j)
+    if(lag_display[[j]]){
+      cat("For:",j)
+      cat("lookback",lookback[[j]])
       if (length(feature_stat[[as.name(j)]])>0){
         # print(feature_stat[[as.name(i)]])
+        print("This part")
         all_variables_to_create = append(all_variables_to_create, expand.grid(temporal_data %>%
                                                                                 dplyr::filter(category== j ) %>%
                                                                                 dplyr::distinct(variable) %>%
@@ -68,14 +71,14 @@ colnames_generator = function( temporal_data,
                                          tidyr::unite(variable_names, Var1:Var3) %>%
                                          dplyr::pull(variable_names))
     }
-    if (length(feature_stat[[as.name(j)]])>0 & lookback[[j]] > 0 & !is.null(lag_compute[[as.name(j)]])){
+    if (length(feature_stat[[as.name(j)]])>0 & lookback[[j]] > 0 & !is.null(lag_compute[[j]])){
       # print(feature_stat[[as.name(i)]])
       lag_variables_to_create = append(lag_variables_to_create, expand.grid(temporal_data %>%
                                                                               dplyr::filter(category== j ) %>%
                                                                               dplyr::distinct(variable) %>%
                                                                               dplyr::pull(variable),
                                                                             feature_stat[[as.name(j)]],
-                                                                            ifelse(lag_compute[[as.name(j)]] == "both",tibble("comp" = c("prop","diff")) %>% distinct(comp) ,lag_compute[[as.name(j)]]) ,
+                                                                            ifelse(lag_compute[[j]] == "both",tibble("comp" = c("prop","diff")) %>% distinct(comp) ,lag_compute[[j]]) ,
                                                                             seq(1, ifelse(max_lag>1,max_lag-1,1), by = 1)) %>%
                                          tidyr::unnest() %>% 
                                          dplyr::arrange(Var1, Var2, Var3 , Var4) %>%
@@ -108,7 +111,7 @@ colnames_generator = function( temporal_data,
        distinct(category) %>%
        pull(1)){
     
-    if(!is.null(lag_compute[[as.name(j)]])){
+    if(!is.null(lag_compute[[j]])){
       
       lag_variables_to_create =  append(lag_variables_to_create,expand.grid(temporal_data$variable %>% unique(),
                                                                             "slope",
@@ -121,13 +124,14 @@ colnames_generator = function( temporal_data,
       
     }
   }
-  
-  if (lookback[[j]] > 0){
-    return(list(all_variables_to_create,lag_variables_to_create))
-  }
-  
-  else{
-    return(list(all_variables_to_create))
-  }
+ 
+  # if (lookback[[j]] > 0){
+  #   return(list(all_variables_to_create,lag_variables_to_create))
+  # }
+  # 
+  # else{
+  #   return(list(all_variables_to_create))
+  # }
+  return(list(all_variables_to_create,lag_variables_to_create))
   
 }
