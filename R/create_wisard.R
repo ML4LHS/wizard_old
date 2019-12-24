@@ -198,8 +198,8 @@ create_wisard =  function(
                                                  outdir = "tmp",
                                                  shardby = "encounter_id",
                                                  backend = "data.table")
-      # result_data = fixed_data %>%
-      #   inner_join.disk.frame(result_data, by = "encounter_id",merge_by_chunk_id = F)
+      result_data = fixed_data %>%
+        inner_join.disk.frame(result_data, by = "encounter_id",merge_by_chunk_id = F)
       if(!is.null(write_file)){
        disk.frame::write_disk.frame(result_data,outdir = write_file)
         disk.frame::delete(result_data)
@@ -212,10 +212,10 @@ create_wisard =  function(
     }
     if (class(fixed_data)[1] %in% c("data.frame","tibble","data.table","disk.frame")){
       fixed_data = disk.frame::as.disk.frame(fixed_data)
-      print("what the heck!!")
-      # result_data = fixed_data %>%
-      #   inner_join.disk.frame(result_data,
-      #                                     by = "encounter_id", merge_by_chunk_id = F)
+      
+      result_data = fixed_data %>%
+        inner_join.disk.frame(result_data,
+                                          by = "encounter_id", merge_by_chunk_id = F)
       if(!is.null(write_file)){
         disk.frame::write_disk.frame(result_data,outdir = write_file)
         delete(result_data)
