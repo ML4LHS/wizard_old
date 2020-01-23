@@ -15,6 +15,7 @@ colnames_generator = function( temporal_data,
                                feature_stat = list(labs = c('min', 'mean', 'max'),
                                                    meds = ('min')
                                ),
+                               recent_only = T,
                                lag_display = list("meds" = T,"labs" = T),
                                lag_compute = list("meds" = c("both"),
                                                   "labs" = c("prop")),
@@ -32,12 +33,14 @@ colnames_generator = function( temporal_data,
        pull(1)){
     max_lag = lookback[[j]] %/% window_size[[j]]
     print(j)
-    if(lag_display[[j]]){
+    if(recent_only == F){
       cat("For:",j)
       cat("lookback",lookback[[j]])
+      
+      ## The condition checks if the user has given any feature stat for the categories else default statistics are used.
+      
       if (length(feature_stat[[as.name(j)]])>0){
         # print(feature_stat[[as.name(i)]])
-        print("This part")
         all_variables_to_create = append(all_variables_to_create, expand.grid(temporal_data %>%
                                                                                 dplyr::filter(category== j ) %>%
                                                                                 dplyr::distinct(variable) %>%
@@ -71,10 +74,16 @@ colnames_generator = function( temporal_data,
                                          tidyr::unite(variable_names, Var1:Var3) %>%
                                          dplyr::pull(variable_names))
     }
+    
+    ## Generating the lag columns based on lag_display condition.
+    
     if (length(feature_stat[[as.name(j)]])>0 & lookback[[j]] > 0 & !is.null(lag_compute[[j]])){
+      print("Working on generating the lag  features for the analysis")
+      if(lag_display[[j]] ){
+        print("The category had lag display enabled")
       # print(feature_stat[[as.name(i)]])
       lag_variables_to_create = append(lag_variables_to_create, expand.grid(temporal_data %>%
-                                                                              dplyr::filter(category== j ) %>%
+                                                                              dplyr::filter(category == j ) %>%
                                                                               dplyr::distinct(variable) %>%
                                                                               dplyr::pull(variable),
                                                                             feature_stat[[as.name(j)]],
@@ -89,8 +98,8 @@ colnames_generator = function( temporal_data,
     else{
       next
     }
-    
   }
+}
   
   
   # cat("The total number of features ",
@@ -135,3 +144,7 @@ colnames_generator = function( temporal_data,
   return(list(all_variables_to_create,lag_variables_to_create))
   
 }
+
+
+
+
