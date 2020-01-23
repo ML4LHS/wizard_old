@@ -14,7 +14,7 @@ date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, 
   # if (tolower(class(lookback)[1]) == "period" & tolower(class(lookahead)[1]) == "period" & tolower(class(window_size)[1]) == "period"){
   # print("Got here")
   if(is.null(fixed_data)){
-    stop("Please provide the fixed data frame to use period objects for lag parameters")
+    stop("Please provide a data frame with date of first visit or admit date.")
   }
   else if(class(fixed_data)[1] == "character"){
     fixed_data = disk.frame::csv_to_disk.frame(infile = fixed_data,
@@ -27,8 +27,8 @@ date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, 
 
     #dummy = final_data %>% filter(!is.na(time)) %>% filter(!is.na(admit_time)) %>% head()
   }
-  else if(class(fixed_data) %in% c("data.frame","tibble","disk.frame","data.table")){
-    print("just in")
+  else if(class(fixed_data)[[1]] %in% c("data.frame","tibble","disk.frame","data.table","tbl_df")){
+    #print("just in")
     temporal_data = temporal_data %>%
       dplyr::inner_join(fixed_data %>%
                           dplyr::select(encounter_id, admit_time = time),
@@ -40,8 +40,8 @@ date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, 
 
 
   if (tolower(class(temporal_data$admit_time)[1]) %in% c("character","date","posixct") & tolower(class(temporal_data$time)[1]) %in% c("character","date","posixct") ){
-    print("did i")
-    if(any(stringr::str_detect(temporal_data$admit_time,regex("-|/")) == TRUE) |any(stringr::str_detect(temporal_data$time,regex("-|/")) == TRUE)){
+    #print("did i")
+    if(any(stringr::str_detect(temporal_data$admit_time,stringr::regex("-|/")) == TRUE) |any(stringr::str_detect(temporal_data$time,stringr::regex("-|/")) == TRUE)){
 
       #final_data = final_data %>%
       temporal_data = temporal_data %>%
@@ -51,18 +51,18 @@ date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, 
         dplyr::mutate(time = lubridate::time_length(lubridate::interval(admit_time,time),units)) %>%
         dplyr::select(-admit_time)
 
-      print("ran")
+     # print("ran")
     }
     else{
-      stop("Please provide a valid date object for the time to use the period object")
+      stop("Please make sure if the data type of the time column in fixed dataframe is similar to that of temporal data frame")
     }
   }
   else if (class(temporal_data$admit_time)[1] %in% c("integer","numeric","double") |class(temporal_data$time)[1] %in% c("integer","numeric","double") ){
-    stop("Please provide a valid date type object for the time to use the period object")
+    stop("The time variable in fixed data frame and temporal data frame should be a timestamp")
   }
   else{
     print( class(temporal_data$time))
-    stop("something went wrong")
+    stop("The fixed data should be a data frame,tibble,disk frame or data table to compute the time lags.")
   }
   # }
   # else if( tolower(class(lookback)[1]) == "numeric" & tolower(class(lookahead)[1]) == "numeric" & tolower(class(window_size)[1]) == "numeric"){
