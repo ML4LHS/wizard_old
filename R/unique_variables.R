@@ -7,7 +7,7 @@
 #' @export
 
 unique_variables =  function (data){
-  print("here")
+  print("Generating the unique variables for the analysis.")
 
   data %>%
     dplyr::group_by(variable) %>%
