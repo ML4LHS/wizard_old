@@ -1,142 +1,8 @@
-# library(tidyverse)
-# 
-# 
-# 
-# first_frame = temporal_data %>% 
-#   group_by(encounter_id) %>% 
-#   mutate(max_time = max(time,na.rm = T)) %>% 
-#   ungroup() %>% 
-#   group_by(category) %>% 
-#   group_map(~check_mapper(.x = .x ,.y = .y)) %>% 
-#   bind_rows() 
-# 
-# 
-# 
-# final_frame = first_frame %>% 
-#   group_by(category) %>% 
-#   group_map(~lagged_features(.x = .x, .y =.y,recent_only = T)) %>% 
-#   bind_rows()
-# 
-# column_names = colnames_generator(temporal_data = temporal_data)
-# 
-# all_variables_to_create = c(column_names[[1]],column_names[[2]])
-# 
-# 
-# # After this all the data are gathered together and we have to just impute the data and combine the outcome
-# 
-# outcome_tab = dummy_outcome_variable(temporal_data = temporal_data,
-#                                      outcome_var = "SBP",
-#                                      outcome_stat = list("min","mean"),
-#                                      lookahead = 48,
-#                                      window_size = step )
-# 
-# final_frame = dplyr::bind_rows(final_frame,
-#                                outcome_tab)
-# all_variables_to_create = c(all_variables_to_create, outcome_tab$variable %>% base::unique()  )
-# 
-# final_frame = final_frame %>%
-#   dplyr::group_by(encounter_id,time) %>%
-#   dplyr::filter(any(str_detect(variable,"OUTCOME_"))) %>%
-#   dplyr::ungroup()
-# 
-# spread_data = final_frame %>%
-#   dplyr::mutate(variable = factor(variable, levels = all_variables_to_create)) %>%
-#   dplyr::filter(!is.na(variable)) %>%
-#   dplyr::select(-lag) %>%
-#   dplyr::group_by(encounter_id,variable,time) %>%
-#   dplyr::slice(1) %>%
-#   dplyr::ungroup() %>%
-#   dplyr::group_by(encounter_id,time) %>%
-#   dplyr::select(-key) %>%
-#   tidyr::spread(variable, value)  %>%
-#   dplyr::ungroup()
-  
 
-
-
-lagged_features = function(.x,.y,lookback = list("meds"= 7,"labs"= 48),window_size = list("meds" = 1,"labs" = 6),step = 3,lag_display = list("meds" = T, "labs" = T),
-                        recent_only = F   ,lag_comp = list("meds" = "both", "labs" = "prop")){
-  
-  
-  start = 1
-  final_frame = NULL
-  temp_window_size = window_size[[.y$category]] %>% as.numeric()
-  temp_lookback = lookback[[.y$category]] %>% as.numeric()
-  if(step < temp_window_size){
-    start = 2
-  }
-  
-  if( temp_lookback > 0 & lag_display[[.y$category]]){
-    for ( i in seq(1,(temp_lookback/temp_window_size)-start,1))
-    {
-      print(i)
-      final_frame = dplyr::bind_rows( final_frame,
-                                      .x %>%
-                                        filter(lag == max(lag, na.rm = T)) %>% 
-                                        dplyr::group_by(encounter_id,variable,key) %>%
-                                        dplyr::mutate(new_value = data.table::shift(value,i, type = "lag")) %>%
-                                        dplyr::mutate(lag = lag + i*temp_window_size) %>%
-                                        dplyr::ungroup() %>%
-                                        dplyr::mutate(variable = paste(variable,key,lag, sep = "_")) #%>%
-      )
-      print(i)
-    }
-    
-    final_frame = dplyr::bind_rows(.x %>%
-                                     dplyr::mutate(variable = paste(variable,key, lag , sep ="_")) %>%
-                                     dplyr::mutate(lag = time),
-                                   final_frame %>%
-                                     dplyr::select(encounter_id,variable,time,key,-value,value = new_value, lag)
-    )
-    
-  if(!lag_comp[[.y$category]] %in% c("diff","prop","both")){
-    stop("The lag compute function not supported")
-  }
-  
- # if(lag_display[[.y$category]] == F)
-    if(recent_only == T)
-    {
-  final_frame  = bind_rows(.x %>%
-                             filter(lag == 0) %>% 
-                             dplyr::mutate(variable = paste(variable,key, lag , sep ="_")),
-                           diff_feature(final_frame = final_frame, window_size = temp_window_size, lag_comp[[.y$category]])
-                          )
-
-  }
-
-  else
-    {
-      final_frame = bind_rows( final_frame,
-                               diff_feature(final_frame = final_frame, window_size = temp_window_size, lag_comp[[.y$category]])
-                               )
-    }
-
-  temp_step = step %>% as.numeric()
-  print(temp_step)
-  if( temp_step >= temp_window_size){
-
-  final_frame = final_frame %>%
-    filter(time %% temp_step == 0)
-
-  final_frame
-  }
-  final_frame
-  # else{
-  #   stop(" Provide a valid step function for the analysis")
-  # }
-
-
-  }
- 
- 
-}
-
-
-
-
-
-
-# The step function 
+#' Check mapper function
+#' @param window_size window size for each category
+#' @param step step size
+#' @param feature_stat stats to compute for each feature
 
 
 check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 3,  feature_stat = list(labs = c('min', 'mean', 'max'),
@@ -145,12 +11,12 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
   op = c(feature_stat[[.y$category]],"slope(time,value)")
   print(op)
   times = 1
-  print(step)
+  #print(step)
   temp_window_size = window_size[[.y$category]] %>% as.numeric()
-  print(temp_window_size)
-  
+  #print(temp_window_size)
+ # cat("The minimum time:",.x %>% min(time,na.rm =T) %>% pull(1))  
   check_first_frame = NULL
-  
+
   if(step> temp_window_size){
      
     if( step %% temp_window_size == 0){
@@ -174,13 +40,20 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
   }
   cat ("window_size:",temp_window_size)
   }
-}
+  }
+  
+  # if(nrow(.x) <=0){
+  #   stop("Empty data frame")
+  # }
+  
     
+
 check_first_frame = .x %>% 
     mutate_at(vars(time), as.numeric) %>% 
     mutate(time = floor(time/temp_window_size)*temp_window_size) %>% 
     group_by(encounter_id,time,variable,max_time) %>% 
     summarise_each({{op}}, (value)) %>% 
+    #summarise_each(funs(mean,min,max),value) %>% 
     ungroup() %>%  
     group_by(encounter_id,time) %>%
     gather(key = "key",
@@ -190,8 +63,8 @@ check_first_frame = .x %>%
     ungroup() %>% 
     mutate(value = case_when( value %in% c(NaN,-Inf,Inf) ~ NA_real_, T ~ value) ) %>%
     mutate(time = as.numeric(as.character(time))) %>%
-    mutate(time = time - min(time[which(time >= 0)])) %>% 
-    mutate( time = factor( time , levels = seq( min(time,na.rm = T),max(time,na.rm = T), temp_window_size))) %>% 
+    mutate(time = time - min(time[which(time >= 0)])) %>%
+    mutate( time = case_when(time %>% unique() %>% length()>1~ factor( time , levels = seq(min(time,na.rm = T),max(time,na.rm = T), temp_window_size)),T~as.factor(time))) %>% 
     complete(encounter_id,variable,key,time) %>% 
     group_by(encounter_id) %>%
     mutate(max_time = zoo::na.locf(max_time,na.rm = F)) %>% 
@@ -202,10 +75,10 @@ check_first_frame = .x %>%
     mutate(lag = min(time),category = .y$category) %>% 
     select(-max_time)
 
-print("I ran")
+#print("I ran")
   
   
-  if ( step <= temp_window_size){
+  if ( step <= temp_window_size & length(.x$time[which(.x$time >= step)]) > 0){
   check_first_frame = bind_rows(
     check_first_frame,
     step_lag(temporal_data = .x, step = step, window_size = as.numeric(window_size[[.y$category]]),category = .y$category)
@@ -222,8 +95,11 @@ print("I ran")
 
 
 # This section computes the first lag feature if the step is smaller than the window size. if bigger is not an issue.
-
-
+#' Step lag function is a internal function to adjust to the step value.
+#' @param  temporal_data temporal data frame
+#' @param step step size
+#' @param window_size window size
+#' @param category category of the feature
 step_lag =  function ( temporal_data, step,window_size,category){
 
   print(category)
@@ -244,7 +120,7 @@ for ( i in seq(0, max(temporal_data$time, na.rm = T),step))
     mutate(time = i)#%>% 
     #mutate(time = i)
 )
- print(i)
+# print(i)
 } 
 
 #dummy_frame %>% View()
@@ -279,7 +155,7 @@ time_valid = temporal_data %>%
 
 
 
-print("Did I come here")
+#print("Did I come here")
 dummy_frame = dummy_frame %>% 
   left_join(time_valid,
             by = "encounter_id"
@@ -289,4 +165,70 @@ dummy_frame = dummy_frame %>%
 
 dummy_frame
 
+}
+
+
+## Rephrasing the lagged feature function to support functional program.
+
+#' lagged feature generator
+#' @param lookback
+#' @param window_size
+#' @param step
+
+lagged_feature_generator = function(.x,.y,
+                                    lookback,
+                                    window_size,
+                                    step){
+  
+  start = 1
+  final_frame = NULL
+  temp_window_size = window_size[[.y$category]] %>% as.numeric()
+  temp_lookback = lookback[[.y$category]] %>% as.numeric()
+  if(step < temp_window_size){
+    start = 2
+  }
+  
+  if( temp_lookback > 0 &  (temp_lookback/temp_window_size)-start > 0){
+    for ( i in seq(1,(temp_lookback/temp_window_size)-start,1))
+    {
+      #print(i)
+      final_frame = dplyr::bind_rows( final_frame,
+                                      .x %>%
+                                        filter(lag == max(lag, na.rm = T)) %>% 
+                                        dplyr::group_by(encounter_id,variable,key) %>%
+                                        dplyr::mutate(new_value = data.table::shift(value,i, type = "lag")) %>%
+                                        dplyr::mutate(lag = lag + i*temp_window_size) %>%
+                                        dplyr::ungroup() %>%
+                                        dplyr::mutate(variable = paste(variable,key,lag, sep = "_")) #%>%
+      )
+     # print(i)
+    }
+    print("Merging the final frame")
+    final_frame = dplyr::bind_rows(.x %>%
+                                     dplyr::mutate(variable = paste(variable,key, lag , sep ="_")) %>%
+                                     dplyr::mutate(lag = time) %>% 
+                                     dplyr::mutate(category = .y$category),
+                                   final_frame %>%
+                                     dplyr::select(encounter_id,variable,time,key,-value,value = new_value, lag) %>% 
+                                     dplyr::mutate(category = .y$category)
+    )
+  
+  }
+  final_frame
+}
+
+
+#' iterative_lag_features
+#' @param final_frame data frame of lagged features
+#' @param categories categories 
+#' @param window_size window size
+
+iterative_lag_features = function(final_frame,categories,window_size,lag_compute){
+  
+  final_frame = final_frame %>% 
+    filter(category %in% categories) %>% 
+    group_by(category) %>% 
+    group_map(~diff_feature(.x =.x,.y=.y,window_size = window_size[[.y$category]],lag_compute = lag_compute)) %>% 
+    bind_rows()
+  final_frame
 }
