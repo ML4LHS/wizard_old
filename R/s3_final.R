@@ -297,11 +297,17 @@ write_to = function(obj,file,most_recent){
   #print(all_variables_to_create)
   
   ## Binding all the disk frame together for the initial analysis
+  disk_frame_list = list(obj$wizard_frame,
+                         obj$prop_predictors,
+                         obj$diff_predictors,
+                         obj$outcome_table)
   
-  obj$wizard_frame = disk.frame::rbindlist.disk.frame(df_list = list(obj$wizard_frame,
-                                                                  obj$prop_predictors,
-                                                                  obj$diff_predictors,
-                                                                  obj$outcome_table))
+  
+  ## only retaining the features that were generated.
+  
+  obj$wizard_frame = disk.frame::rbindlist.disk.frame(df_list = disk_frame_list[!is.na(disk_frame_list)])
+  
+  
   
   ## calling a function which will spread and merge the data.
   
@@ -317,49 +323,48 @@ write_to = function(obj,file,most_recent){
   backend = "data.table"
   )
 
-  # if(!is.null(obj$fixed_data)){
-  #   if (class(obj$fixed_data)[1] == "character"){
-  #     
-  #     obj$fixed_data = disk.frame::csv_to_disk.frame(infile = obj$fixed_data,
-  #                                                outdir = "tmp",
-  #                                                shardby = "encounter_id",
-  #                                                backend = "data.table")
-  #     obj$wizard_frame = obj$fixed_data %>%
-  #       inner_join.disk.frame(obj$wizard_frame,merge_by_chunk_id = T)
-  #     if(!is.null(write_file)){
-  #       disk.frame::write_disk.frame(obj$wizard_frame,outdir = write_file)
-  #       disk.frame::delete(obj$wizard_frame)
-  #     }
-  #     
-  #     # return(obj$wizard_frame)
-  #     #data.table::fwrite(obj$wizard_frame, write_file)
-  #   }
-  #   if (class(obj$fixed_data)[1] %in% c("data.frame","tibble","data.table","disk.frame","tbl_df")){
-  #     obj$fixed_data = disk.frame::as.disk.frame(obj$fixed_data)
-  #     
-  #     obj$wizard_frame = obj$fixed_data %>%
-  #       inner_join(obj$wizard_frame,
-  #                             by = "encounter_id", merge_by_chunk_id = F)
-  #     if(!is.null(write_file)){
-  #       disk.frame::write_disk.frame(obj$wizard_frame,outdir = write_file)
-  #       delete(obj$wizard_frame)
-  #     }
-  #     
-  #   }
-  # }
-  # else{
-  #   print("Final condition where fixed data is not present")
-  #   
-  #   if(!is.null(write_file)){
-  #     disk.frame::write_disk.frame(obj$wizard_frame,outdir = write_file)
-  #     disk.frame::delete(obj$wizard_frame)
-  #   }
-  #   else{
-  #     return(obj$wizard_frame)
-  #   }
-  #   #return (obj$wizard_frame)
-  #   #data.table::fwrite(obj$wizard_frame, write_file)
-  # }
+  if(!is.null(obj$fixed_data)){
+    if (class(obj$fixed_data)[1] == "character"){
+      
+      obj$fixed_data = disk.frame::csv_to_disk.frame(infile = obj$fixed_data,
+                                                     outdir = "tmp",
+                                                     shardby = "encounter_id",
+                                                     backend = "data.table",
+                                                     nchunks = nchunk(obj$wizard_frame))
+      obj$wizard_frame = obj$fixed_data %>%
+        inner_join(obj$wizard_frame,by = "encounter_id",merge_by_chunk_id = F)
+      if(!is.null(write_file)){
+        disk.frame::write_disk.frame(obj$wizard_frame,outdir = write_file)
+        disk.frame::delete(obj$wizard_frame)
+      }
+      
+    }
+    if (class(obj$fixed_data)[1] %in% c("data.frame","tibble","data.table","disk.frame","tbl_df")){
+      obj$fixed_data = disk.frame::as.disk.frame(obj$fixed_data, nchunks = nchunk(obj$wizard_frame),shardby = "encounter_id")
+      
+      obj$wizard_frame = obj$fixed_data %>%
+        inner_join(obj$wizard_frame,
+                   by = "encounter_id", merge_by_chunk_id = F)
+      if(!is.null(write_file)){
+        disk.frame::write_disk.frame(obj$wizard_frame,outdir = write_file)
+        delete(obj$wizard_frame)
+      }
+      
+    }
+  }
+  else{
+    print("Final condition where fixed data is not present")
+    
+    if(!is.null(write_file)){
+      disk.frame::write_disk.frame(obj$wizard_frame,outdir = write_file)
+      disk.frame::delete(obj$wizard_frame)
+    }
+    else{
+      return(obj$wizard_frame)
+    }
+    #return (obj$wizard_frame)
+    #data.table::fwrite(obj$wizard_frame, write_file)
+  }
   
   obj
 }
@@ -368,34 +373,38 @@ write_to = function(obj,file,most_recent){
 
 ## To validate the function Loading the temporal dataframe and creating a wizard object.
 
-temporal_data = fread("Z://va_aki_project/datasets/temporal_data.csv") %>% 
-  as_tibble()
 
-fixed_data = fread("Z://va_aki_project/datasets/fixed_data.csv") %>% 
-  as_tibble()
+## To validate the function Loading the temporal dataframe and creating a wizard object.
 
-wizard_object = build_wizard_object(temporal_data = dev_data,
-                           fixed_data = fixed_data) %>% 
-  add_lagged_predictors(obj = .,
-                      window_size = list("meds" = hours(6),"labs" = hours(6)),
-                      lookback = list("meds" = hours(6), labs = hours(48)),
-                      lookahead = hours(30),
-                      step = hours(3),
-                      feature_stat = list(labs = c('min', 'mean', 'max'),
-                      meds = ('min')),
-                      impute = F) %>% 
-                  add_prop_predictors(categories = list("labs")) %>% 
-                  add_diff_predictors(categories = list("labs")) %>% 
-  add_outcome(outcome_var = "SBP",outcome_stat = list("mean")) %>% 
-  write_to(obj = .,most_recent = F)
-  
-  
-wizard_object$wizard_frame %>%
-  collect() %>% 
-  arrange(encounter_id,time) %>% 
-  View()
-
-
-
-
-wizard_object$wizard_frame %>% collect() %>% arrange(encounter_id,time) %>% View()
+# temporal_data = fread("Z://va_aki_project/datasets/temporal_data.csv") %>% 
+#   as_tibble()
+# 
+# fixed_data = fread("Z://va_aki_project/datasets/fixed_data.csv") %>% 
+#   as_tibble()
+# 
+# wizard_object = build_wizard_object(temporal_data = dev_data,
+#                            fixed_data = fixed_data) %>% 
+#   add_lagged_predictors(obj = .,
+#                       window_size = list("meds" = hours(6),"labs" = hours(6)),
+#                       lookback = list("meds" = hours(6), labs = hours(48)),
+#                       lookahead = hours(30),
+#                       step = hours(3),
+#                       feature_stat = list(labs = c('min', 'mean', 'max'),
+#                       meds = ('min')),
+#                       impute = F) %>% 
+#                   add_prop_predictors(categories = list("labs")) %>% 
+#                   add_diff_predictors(categories = list("labs")) %>% 
+#   add_outcome(outcome_var = "SBP",outcome_stat = list("mean")) %>% 
+#   write_to(obj = .,most_recent = F)
+#   
+#   
+# wizard_object$wizard_frame %>%
+#   collect() %>% 
+#   arrange(encounter_id,time) %>% 
+#   View()
+# 
+# 
+# ## Checking the nchunks
+# 
+# check_data = as.disk.frame(fixed_data, nchunks = nchunk(wizard_object$wizard_frame))
+# inner_join(check_data,wizard_object$wizard_frame,by = "encounter_id",merge_by_chunk_id = F)
