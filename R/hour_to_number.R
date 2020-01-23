@@ -177,18 +177,25 @@ hour_to_number = function(window_size = NULL,lookback =NULL,lookahead = NULL, st
         }
 
         if (units == "hours"){
+          print('Returning hours')
           window_size = lapply(window_size, function(x) {lubridate::period_to_seconds(x)/3600})
+          print('Defined window_size. About to convert period to seconds for lookback.')
           lookback = lapply(lookback, function(x) {lubridate::period_to_seconds(x)/(3600)})
+          print('Converted period to seconds for lookback.')
           lookahead = lubridate::period_to_seconds(lookahead)/(3600)
+          print('Converted period to seconds for lookahead.')
           step = lubridate::period_to_seconds(step)/(3600)
+          print('Converted period to seconds for step.')
         }
         if (units == "mins"){
+          print('Returning minutes')
           window_size = lapply( window_size, function(x){lubridate::period_to_seconds(x)/60})
           lookback = lapply(lookback, function(x) {lubridate::period_to_seconds(x)/(60)})
           lookahead = lubridate::period_to_seconds(lookahead)/(60)
           step = lubridate::period_to_seconds(step)/(60)
         }
         if (units == "secs"){
+          print('Returning seconds')
           window_size = lapply(window_size, function(x) {lubridate::period_to_seconds(x)})
           lookback = lapply(lookback, function(x) {lubridate::period_to_seconds(x)})
           lookahead = lubridate::period_to_seconds(lookahead)
