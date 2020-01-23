@@ -7,10 +7,13 @@
 #' @return lag frame
 #' @export
 
-diff_feature = function(final_frame,window_size, lag_compute){
+diff_feature = function(.x,.y,window_size, lag_compute){
+
+ 
+  
 
   
-  lag_frame = final_frame %>%
+  lag_frame = .x %>%
     dplyr::group_by(encounter_id,variable) %>%
     # arrange(encounter_id,variable) %>%
     dplyr::mutate(lead_value = shift(value,n =1,type = "lead") ) %>%
@@ -31,8 +34,14 @@ diff_feature = function(final_frame,window_size, lag_compute){
    # dplyr::mutate(new_value = coalesce(value,new_value)) %>% 
     dplyr::ungroup() %>% 
     dplyr::select(-lead_value,-lag_time,-value,-lag_compute) %>% 
-    dplyr::rename(value = new_value)
+    dplyr::rename(value = new_value) %>% 
+    dplyr::mutate(category = .y$category)
 
 
-  return(lag_frame)
+ lag_frame
+
+ 
 }
+
+
+
