@@ -27,7 +27,7 @@ dummy_outcome_variable =  function( temporal_data,
 
   while(k < time_period)
   {
-    print(k)
+    
     temporal_data_k = temporal_data %>%
       dplyr::select(time,variable,value,encounter_id) %>%
       dplyr::mutate(time = floor(time/window_size)*window_size,
@@ -37,7 +37,7 @@ dummy_outcome_variable =  function( temporal_data,
       # time) %>%
       dplyr::filter((time > 0 & (time <= floor(lookahead/window_size)*window_size - window_size)) & (variable == outcome_var)) %>%
       dplyr::mutate(operation = paste(outcome_stat,collapse = ",")) %>%
-      dplyr::separate_rows(operation,sep =",")
+      tidyr::separate_rows(operation,sep =",")
     if (nrow(temporal_data_k) >0) {
       temporal_data_k = temporal_data_k %>%
         dplyr::group_by(encounter_id,time) %>%
