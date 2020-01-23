@@ -35,3 +35,8 @@ categorical_col_names_generator = function(temporal_data){
     temp_data = temp_data %>% as_data_frame()
     temp_data
 }
+
+
+
+
+
