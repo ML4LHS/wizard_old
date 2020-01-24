@@ -331,6 +331,7 @@ add_outcome = function(obj, outcome_var,outcome_stat = list()){
 #' @param write_file File location to write file
 #' @param most_recent To include only the most recent lagged features
 #' @return wizard object
+#' @import disk.frame
 #' @export 
 
 
