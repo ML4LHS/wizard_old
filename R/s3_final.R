@@ -9,7 +9,7 @@
 new_wizard = function(temporal_data = NA,
                       fixed_data = NA){
   ## Checking if the temporal data is a data.frame,data.table or a disk frame
-  stopifnot(is_disk.frame(temporal_data) || is.data.table(temporal_data) || is.data.frame(temporal_data))
+  stopifnot(disk.frame::is_disk.frame(temporal_data) || data.table::is.data.table(temporal_data) || data.frame::is.data.frame(temporal_data))
   
   ## If temporal data is of accepted type build a S3 object called wizard.
   
