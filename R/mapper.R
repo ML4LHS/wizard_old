@@ -82,7 +82,7 @@ check_first_frame = .x %>%
   if ( step <= temp_window_size & length(.x$time[which(.x$time >= step)]) > 0){
   check_first_frame = bind_rows(
     check_first_frame,
-    step_lag(temporal_data = .x, step = step, window_size = as.numeric(window_size[[.y$category]]),category = .y$category)
+    wisard::step_lag(temporal_data = .x, step = step, window_size = as.numeric(window_size[[.y$category]]),category = .y$category)
   )
 }
   else{
@@ -231,7 +231,7 @@ iterative_lag_features = function(final_frame,categories,window_size,lag_compute
   final_frame = final_frame %>% 
     filter(category %in% categories) %>% 
     group_by(category) %>% 
-    group_map(~diff_feature(.x =.x,.y=.y,window_size = window_size[[.y$category]],lag_compute = lag_compute)) %>% 
+    group_map(~wisard::diff_feature(.x =.x,.y=.y,window_size = window_size[[.y$category]],lag_compute = lag_compute)) %>% 
     bind_rows()
   final_frame
 }
