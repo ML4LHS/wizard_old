@@ -41,7 +41,7 @@ build_wizard_object = function( temporal_data ,
     stop(" Enter a valid file location")
   }
   else if (class(temporal_data)[1] == "character"){
-    print("Reading in the file from the file system (file location)")
+    cat("Reading in the file from the file system:",temporal_data)
     dev_data =  disk.frame::csv_to_disk.frame(infile = temporal_data,
                                               outdir = "Z://adharsh_hrqol_brfss/chunk_data",
                                               shardby = "encounter_id",
@@ -265,7 +265,7 @@ add_outcome = function(obj, outcome_var,outcome_stat = list()){
 }
 
 
-write_to = function(obj,file,most_recent){
+write_to = function(obj,write_file = NULL,most_recent){
   
   
   
@@ -319,6 +319,7 @@ write_to = function(obj,file,most_recent){
 
    ))),
   overwrite = TRUE,
+  nchunks = 2,
   shardby = "encounter_id",
   backend = "data.table"
   )
@@ -340,7 +341,10 @@ write_to = function(obj,file,most_recent){
       
     }
     if (class(obj$fixed_data)[1] %in% c("data.frame","tibble","data.table","disk.frame","tbl_df")){
+      
+      if(class(obj$fixed_data)[1] != "disk.frame"){
       obj$fixed_data = disk.frame::as.disk.frame(obj$fixed_data, nchunks = nchunk(obj$wizard_frame),shardby = "encounter_id")
+      }
       
       obj$wizard_frame = obj$fixed_data %>%
         inner_join(obj$wizard_frame,
@@ -376,35 +380,42 @@ write_to = function(obj,file,most_recent){
 
 ## To validate the function Loading the temporal dataframe and creating a wizard object.
 
-# temporal_data = fread("Z://va_aki_project/datasets/temporal_data.csv") %>% 
-#   as_tibble()
-# 
-# fixed_data = fread("Z://va_aki_project/datasets/fixed_data.csv") %>% 
-#   as_tibble()
-# 
-# wizard_object = build_wizard_object(temporal_data = dev_data,
-#                            fixed_data = fixed_data) %>% 
-#   add_lagged_predictors(obj = .,
-#                       window_size = list("meds" = hours(6),"labs" = hours(6)),
-#                       lookback = list("meds" = hours(6), labs = hours(48)),
-#                       lookahead = hours(30),
-#                       step = hours(3),
-#                       feature_stat = list(labs = c('min', 'mean', 'max'),
-#                       meds = ('min')),
-#                       impute = F) %>% 
-#                   add_prop_predictors(categories = list("labs")) %>% 
-#                   add_diff_predictors(categories = list("labs")) %>% 
-#   add_outcome(outcome_var = "SBP",outcome_stat = list("mean")) %>% 
-#   write_to(obj = .,most_recent = F)
-#   
-#   
-# wizard_object$wizard_frame %>%
-#   collect() %>% 
-#   arrange(encounter_id,time) %>% 
-#   View()
-# 
-# 
+ # temporal_data = fread("Z://va_aki_project/datasets/temporal_data.csv") %>%
+ #   as_tibble()
+ # 
+ # fixed_data = fread("Z://va_aki_project/datasets/fixed_data.csv") %>%
+ #   as_tibble()
+ # 
+ # wizard_object = build_wizard_object(temporal_data = "Z://va_aki_project/datasets/temporal_data.csv",
+ #                            fixed_data = fixed_data) %>%
+ #   add_lagged_predictors(obj = .,
+ #                       window_size = list("meds" = hours(6),"labs" = hours(6)),
+ #                       lookback = list("meds" = hours(6), labs = hours(48)),
+ #                       lookahead = hours(30),
+ #                       step = hours(3),
+ #                       feature_stat = list(labs = c('min', 'mean', 'max'),
+ #                       meds = ('min')),
+ #                       impute = F) %>%
+ #                   add_prop_predictors(categories = list("labs")) %>%
+ #                   add_diff_predictors(categories = list("labs")) %>%
+ #   add_outcome(outcome_var = "SBP",outcome_stat = list("mean")) %>%
+ #   write_to(obj = .,write_file = NULL,most_recent = F)
+ # 
+ # 
+ # 
+ # wizard_object$wizard_frame %>%
+ #   collect() %>%
+ #   arrange(encounter_id,time.y) %>%
+ #   View()
+ # 
+ # 
+ # 
+ # 
+
+ 
 # ## Checking the nchunks
 # 
 # check_data = as.disk.frame(fixed_data, nchunks = nchunk(wizard_object$wizard_frame))
 # inner_join(check_data,wizard_object$wizard_frame,by = "encounter_id",merge_by_chunk_id = F)
+
+
