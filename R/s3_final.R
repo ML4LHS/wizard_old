@@ -20,8 +20,6 @@ new_wizard = function(temporal_data = NA,
     lag_display = list(),
     lag_compute = list(),
     feature_stat = NA,
-    all_variables_to_create = NA,
-    lag_variables_to_create = NA,
     lagged_predictors = FALSE,
     prop_predictors = NA,
     diff_predictors = NA,
@@ -31,7 +29,16 @@ new_wizard = function(temporal_data = NA,
   )
 }
 
-## The first function to create the wizard object for the analysis.
+
+#' Build wizard object
+#' 
+#' Creates and initialized a wizard object with temporal and fixed data frame
+#' 
+#' @param temporal_data temporal dataframe
+#' @param fixed_data fixed data
+#' @return wizard object
+#' @export
+
 
 build_wizard_object = function( temporal_data ,
                                 fixed_data){
@@ -78,14 +85,25 @@ add_outcome = function(x){
   UseMethod("add_outcome",x)
 }
 
-## The add_lagged_predictors function definition takes the wizard object as a parameter and the lookback and lookahead.
+#' add_lagged_predictors
+#' 
+#' The function generates the lagged features for every window
+#' 
+#' @param obj wizard object
+#' @param lookback lookback period for each category
+#' @param window_size window_size for each category
+#' @param step Number of windows to move forward
+#' @param lookahead The outcome period
+#' @param feature_stat The summary statistics to compute for each category
+#' @param impute T/F to carry forward impute
+#' @return wizard object
+#' @export
 
 add_lagged_predictors = function ( obj ,
                                    lookback,
                                    window_size,
                                    step,
                                    lookahead,
-                                   recent_only,
                                    feature_stat,
                                    impute){
   obj$feature_stat = feature_stat
@@ -115,12 +133,7 @@ add_lagged_predictors = function ( obj ,
                                                       overwrite = T,
                                                       shardby = "encounter_id",
                                                       backend = "data.table")
-        # time_fix = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ date_to_time(temporal_data = .,fixed_data = fixed_data,units = period_measure$units))) ,
-        #                                      overwrite = T,
-        #                                      shardby = "encounter_id",
-        #                                      backend = "data.table")
-        # disk.frame::delete(final_data)
-        # final_data = time_fix
+       
       }
       
       else{
@@ -184,6 +197,7 @@ add_lagged_predictors = function ( obj ,
   
   print("Finished Generating lagged features")
   
+  obj$lagged_features = TRUE
   obj
   
   
@@ -191,16 +205,28 @@ add_lagged_predictors = function ( obj ,
 
 
 
-## Add proportional predictors takes in categories and 
+#'add_prop_predictors
+#'
+#' Function to generate proportional variation between lagged features
+#' 
+#'  @param obj wizard object
+#'  @param categories List of categories to generate teh proportional variation feature
+#'  @return wizard object
+#'  @export 
 
 
 add_prop_predictors = function(obj,categories = list()){
+  
+  if (obj$lagged_predictors == FALSE){
+    cat("The lagged features are not found.")
+  }
   
   obj$prop_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ iterative_lag_features(final_frame = ., 
                                                                                                                             categories = categories,
                                                                                                                           window_size = obj$window_size, 
                                                                                                                           lag_compute = "prop"
                                                                                                                     ))) ,
+                                                  overwrite = T,
                                                   overwrite = T,
                                                   shardby = "encounter_id",
                                                   backend = "data.table")
@@ -218,7 +244,22 @@ add_prop_predictors = function(obj,categories = list()){
 }
 
 
+#'add_diff_predictors
+#'
+#' Function to generate iterated difference between lagged features
+#' 
+#'  @param obj wizard object
+#'  @param categories List of categories to generate the iterated difference feature
+#'  @return wizard object
+#'  @export 
+
+
 add_diff_predictors = function(obj,categories = list()){
+  
+  if (obj$lagged_predictors == FALSE){
+    cat("The lagged features are not found.")
+  }
+  
   
   obj$diff_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ iterative_lag_features(final_frame = ., 
                                                                                                                             categories = categories,
@@ -244,6 +285,18 @@ add_diff_predictors = function(obj,categories = list()){
   obj
 }
 
+
+#' add_outcome
+#' 
+#' The function to generate the outcome stat for the data
+#' 
+#' @param obj wizard object
+#' @param outcome_var outcome variable
+#' @param outcome_stat outcome statistics
+#' @return wizard object
+#' @export
+
+
 add_outcome = function(obj, outcome_var,outcome_stat = list()){
   
   obj$outcome_var = outcome_var
@@ -265,9 +318,22 @@ add_outcome = function(obj, outcome_var,outcome_stat = list()){
 }
 
 
+#' write_to
+#' 
+#' The function to write or spread the temporal data frame.
+#' 
+#' @param obj wizard object
+#' @param write_file File location to write file
+#' @param most_recent To include only the most recent lagged features
+#' @return wizard object
+#' @export 
+
+
 write_to = function(obj,write_file = NULL,most_recent){
   
-  
+  if (obj$lagged_predictors == FALSE){
+    cat("The lagged features are not found.")
+  }
   
   obj$lag_compute =obj$lag_compute[!is.na(wizard_object$lag_compute)]
   
@@ -311,7 +377,6 @@ write_to = function(obj,write_file = NULL,most_recent){
   
   ## calling a function which will spread and merge the data.
   
-  #print(class(obj$wizard_frame))
   
   obj$wizard_frame = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ final_spread_data(temporal_data = .,
                                                                                                                            outcome_var = obj$outcome_var,

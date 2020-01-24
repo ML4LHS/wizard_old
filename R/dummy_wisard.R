@@ -5,6 +5,7 @@
 #' @param step Step variable
 #' @param lookback lookaback
 #' @param impute T/F
+#' @export
 
 lagged_feature =  function(temporal_data = NA,
                               window_size = NA,
@@ -50,6 +51,7 @@ lagged_feature =  function(temporal_data = NA,
 #' @param temporal_dataframe
 #' @param outcome_var
 #' @param all_variables_to_create
+#' @export
 
 
 

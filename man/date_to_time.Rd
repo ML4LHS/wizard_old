@@ -4,8 +4,7 @@
 \alias{date_to_time}
 \title{Date to time}
 \usage{
-date_to_time(temporal_data = temporal_data, fixed_data = fixed_data,
-  units)
+date_to_time(temporal_data = temporal_data, fixed_data = fixed_data, units)
 }
 \arguments{
 \item{temporal_data}{temporal df}

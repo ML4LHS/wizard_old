@@ -4,12 +4,12 @@
 \alias{diff_feature}
 \title{Difference features}
 \usage{
-diff_feature(final_frame, window_size)
+diff_feature(.x, .y, window_size, lag_compute)
 }
 \arguments{
-\item{final_frame}{final df}
-
 \item{window_size}{window size}
+
+\item{final_frame}{final df}
 }
 \value{
 lag frame

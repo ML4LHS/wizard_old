@@ -4,7 +4,12 @@
 \alias{hour_to_number}
 \title{Hour to number}
 \usage{
-hour_to_number(window_size = NULL, lookback = NULL, lookahead = NULL)
+hour_to_number(
+  window_size = NULL,
+  lookback = NULL,
+  lookahead = NULL,
+  step = NULL
+)
 }
 \arguments{
 \item{window_size}{window size}
@@ -12,9 +17,11 @@ hour_to_number(window_size = NULL, lookback = NULL, lookahead = NULL)
 \item{lookback}{lookback}
 
 \item{lookahead}{lookahead}
+
+\item{step}{step}
 }
 \value{
-ist of values
+list of values
 }
 \description{
 convert the user argument which is a period object to a numeric value

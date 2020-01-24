@@ -4,23 +4,28 @@
 \alias{colnames_generator}
 \title{Creates features}
 \usage{
-colnames_generator(temporal_data, feature_stat = list(labs = c("min",
-  "mean", "max", "n"), meds = ("n")), lagged_feature_stat = list(labs =
-  c("min", "mean")), default_stats = c("min", "max", "mean", "n"),
-  lookback = 48, window_size = 6)
+colnames_generator(
+  temporal_data,
+  feature_stat = list(labs = c("min", "mean", "max"), meds = ("min")),
+  recent_only = T,
+  lag_display = list(meds = T, labs = T),
+  lag_compute = list(meds = c("both"), labs = c("prop")),
+  lookback = list(meds = 7, labs = 48),
+  window_size = list(meds = 1, labs = 6)
+)
 }
 \arguments{
 \item{temporal_data}{Data frame}
 
 \item{feature_stat}{List of statistical methods to use}
 
-\item{lagged_feature_stat}{feature stats}
-
-\item{default_stats}{default stats}
-
 \item{lookback}{lookback period}
 
 \item{window_size}{window size}
+
+\item{lagged_feature_stat}{feature stats}
+
+\item{default_stats}{default stats}
 }
 \value{
 Variable list

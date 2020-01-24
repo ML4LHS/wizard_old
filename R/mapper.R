@@ -3,6 +3,7 @@
 #' @param window_size window size for each category
 #' @param step step size
 #' @param feature_stat stats to compute for each feature
+#' @export
 
 
 check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 3,  feature_stat = list(labs = c('min', 'mean', 'max'),
@@ -100,6 +101,7 @@ check_first_frame = .x %>%
 #' @param step step size
 #' @param window_size window size
 #' @param category category of the feature
+#' @export
 step_lag =  function ( temporal_data, step,window_size,category){
 
   print(category)
@@ -168,12 +170,13 @@ dummy_frame
 }
 
 
-## Rephrasing the lagged feature function to support functional program.
+
 
 #' lagged feature generator
 #' @param lookback
 #' @param window_size
 #' @param step
+#' @export 
 
 lagged_feature_generator = function(.x,.y,
                                     lookback,

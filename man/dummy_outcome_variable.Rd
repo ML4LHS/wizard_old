@@ -4,8 +4,13 @@
 \alias{dummy_outcome_variable}
 \title{Dummy outcome variable}
 \usage{
-dummy_outcome_variable(temporal_data, outcome_var = NULL,
-  outcome_stat = list("mean"), lookahead = 30, window_size = 6)
+dummy_outcome_variable(
+  temporal_data,
+  outcome_var = NULL,
+  outcome_stat = list("mean"),
+  lookahead = 30,
+  window_size = 6
+)
 }
 \arguments{
 \item{temporal_data}{temporal df}
