@@ -19,14 +19,14 @@ lagged_feature =  function(temporal_data = NA,
     mutate(max_time = max(time,na.rm = T)) %>% 
     ungroup() %>% 
     group_by(category) %>% 
-    group_map(~check_mapper(.x = .x ,.y = .y,window_size = window_size,step = step,feature_stat = feature_stat)) %>% 
+    group_map(~wisard::check_mapper(.x = .x ,.y = .y,window_size = window_size,step = step,feature_stat = feature_stat)) %>% 
     bind_rows() 
   
   print("Computed the first frame")
   
   final_frame = first_frame %>% 
     group_by(category) %>% 
-    group_map(~lagged_feature_generator(.x = .x, .y =.y,lookback = lookback, window_size = window_size,step = step)) %>% 
+    group_map(~wisard::lagged_feature_generator(.x = .x, .y =.y,lookback = lookback, window_size = window_size,step = step)) %>% 
     bind_rows()
   
   print("Computed the final frame as well!!!")
