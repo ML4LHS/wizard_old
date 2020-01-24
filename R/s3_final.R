@@ -177,7 +177,7 @@ add_lagged_predictors = function ( obj ,
   
   
   column_names_df = dplyr::bind_rows( column_names_df,
-                                      map(obj$temporal_data, ~wisard::unique_variables(.), lazy = F) %>% head()
+                                      disk.frame::map(obj$temporal_data, ~wisard::unique_variables(.), lazy = F) %>% head()
   )
   print(" Generating the unique names")
   column_names_df = column_names_df %>%
@@ -457,9 +457,9 @@ write_to = function(obj,write_file = NULL,most_recent){
  # fixed_data = fread("Z://va_aki_project/datasets/fixed_data.csv") %>%
  #   as_tibble()
  # 
- # wizard_object = build_wizard_object(temporal_data = "Z://va_aki_project/datasets/temporal_data.csv",
+ # wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
  #                            fixed_data = fixed_data) %>%
- #   add_lagged_predictors(obj = .,
+ #   wisard::add_lagged_predictors(obj = .,
  #                       window_size = list("meds" = hours(6),"labs" = hours(6)),
  #                       lookback = list("meds" = hours(6), labs = hours(48)),
  #                       lookahead = hours(30),
@@ -467,11 +467,11 @@ write_to = function(obj,write_file = NULL,most_recent){
  #                       feature_stat = list(labs = c('min', 'mean', 'max'),
  #                       meds = ('min')),
  #                       impute = F) %>%
- #                   add_prop_predictors(categories = list("labs")) %>%
- #                   add_diff_predictors(categories = list("labs")) %>%
- #   add_outcome(outcome_var = "SBP",outcome_stat = list("mean")) %>%
- #   write_to(obj = .,write_file = NULL,most_recent = F)
- # 
+ #                   wisard::add_prop_predictors(categories = list("labs")) %>%
+ #                   wisard::add_diff_predictors(categories = list("labs")) %>%
+ #   wisard::add_outcome(outcome_var = "SBP",outcome_stat = list("mean")) %>%
+ #   wisard::write_to(obj = .,write_file = NULL,most_recent = F)
+
  # 
  # 
  # wizard_object$wizard_frame %>%
