@@ -1,5 +1,10 @@
-## Creating a S3 object variable with only 3 variables.
 
+
+#' new wizard
+#' 
+#' The function initialises the wizard object.
+#' 
+#'@export
 
 new_wizard = function(temporal_data = NA,
                       fixed_data = NA){
@@ -107,7 +112,7 @@ add_lagged_predictors = function ( obj ,
                                    feature_stat,
                                    impute){
   obj$feature_stat = feature_stat
-  obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ categorical_col_names_generator(temporal_data = .)
+  obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wisard::categorical_col_names_generator(temporal_data = .)
   ),parallel = FALSE),
   outdir = "tmp1",
   overwrite = T,
@@ -122,14 +127,14 @@ add_lagged_predictors = function ( obj ,
       
       if(tolower(class(collect(sample_frac(obj$temporal_data,0.01))$time)) %in% c("character","period")){
         
-        period_measure = hour_to_number(lookback = lookback,window_size = window_size,lookahead = lookahead, step = step)
+        period_measure = wisard::hour_to_number(lookback = lookback,window_size = window_size,lookahead = lookahead, step = step)
         obj$lookback = period_measure$lookback
         obj$lookahead = period_measure$lookahead
         obj$window_size = period_measure$window_size
         obj$step = period_measure$step
         cat("step:",obj$step)
         
-        obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ date_to_time(temporal_data = .,fixed_data = fixed_data,units = period_measure$units))) ,
+        obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wisard::date_to_time(temporal_data = .,fixed_data = fixed_data,units = period_measure$units))) ,
                                                       overwrite = T,
                                                       shardby = "encounter_id",
                                                       backend = "data.table")
@@ -172,7 +177,7 @@ add_lagged_predictors = function ( obj ,
   
   
   column_names_df = dplyr::bind_rows( column_names_df,
-                                      map(obj$temporal_data, ~unique_variables(.), lazy = F) %>% head()
+                                      map(obj$temporal_data, ~wisard::unique_variables(.), lazy = F) %>% head()
   )
   print(" Generating the unique names")
   column_names_df = column_names_df %>%
@@ -183,7 +188,7 @@ add_lagged_predictors = function ( obj ,
   
   
  
-  obj$wizard_frame =  disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ lagged_feature(temporal_data = .,
+  obj$wizard_frame =  disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wisard::lagged_feature(temporal_data = .,
                                                                                                                    window_size = obj$window_size,
                                                                                                                       lookback = obj$lookback,
                                                                                                                       feature_stat = feature_stat,
@@ -221,7 +226,7 @@ add_prop_predictors = function(obj,categories = list()){
     cat("The lagged features are not found.")
   }
   
-  obj$prop_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ iterative_lag_features(final_frame = ., 
+  obj$prop_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wisard::iterative_lag_features(final_frame = ., 
                                                                                                                             categories = categories,
                                                                                                                           window_size = obj$window_size, 
                                                                                                                           lag_compute = "prop"
@@ -261,7 +266,7 @@ add_diff_predictors = function(obj,categories = list()){
   }
   
   
-  obj$diff_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ iterative_lag_features(final_frame = ., 
+  obj$diff_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wisard::iterative_lag_features(final_frame = ., 
                                                                                                                             categories = categories,
                                                                                                                             window_size = obj$window_size, 
                                                                                                                             lag_compute = "diff"
@@ -302,7 +307,7 @@ add_outcome = function(obj, outcome_var,outcome_stat = list()){
   obj$outcome_var = outcome_var
   obj$outcome_stat = outcome_stat
   
-  obj$outcome_table = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ dummy_outcome_variable(temporal_data = ., 
+  obj$outcome_table = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wisard::dummy_outcome_variable(temporal_data = ., 
                                                                                                                           outcome_var = outcome_var,
                                                                                                                           window_size = obj$step, 
                                                                                                                           outcome_stat = outcome_stat,
@@ -378,7 +383,7 @@ write_to = function(obj,write_file = NULL,most_recent){
   ## calling a function which will spread and merge the data.
   
   
-  obj$wizard_frame = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ final_spread_data(temporal_data = .,
+  obj$wizard_frame = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wisard::final_spread_data(temporal_data = .,
                                                                                                                            outcome_var = obj$outcome_var,
                                                                                                                            all_variables_to_create = all_variables_to_create
 
