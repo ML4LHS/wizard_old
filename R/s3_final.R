@@ -457,20 +457,20 @@ write_to = function(obj,write_file = NULL,most_recent){
  #   as_tibble()
  # 
 
- wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
-                            fixed_data = fixed_data) %>%
-   wisard::add_lagged_predictors(obj = .,
-                       window_size = list("meds" = hours(6),"labs" = hours(6)),
-                       lookback = list("meds" = hours(6), labs = hours(48)),
-                       lookahead = hours(30),
-                       step = hours(3),
-                       feature_stat = list(labs = c('min', 'mean', 'max'),
-                       meds = ('min')),
-                       impute = F) %>%
-                  #wisard::add_prop_predictors(categories = list("labs")) %>%
-                  wisard::add_diff_predictors(categories = list("labs")) %>%
-   wisard::add_outcome(obj = .,outcome_var = "SBP",outcome_stat = list("mean")) %>%
-   wisard::write_to(obj = .,write_file = NULL,most_recent = F)
+ # wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
+ #                            fixed_data = fixed_data) %>%
+ #   wisard::add_lagged_predictors(obj = .,
+ #                       window_size = list("meds" = hours(6),"labs" = hours(6)),
+ #                       lookback = list("meds" = hours(6), labs = hours(48)),
+ #                       lookahead = hours(30),
+ #                       step = hours(3),
+ #                       feature_stat = list(labs = c('min', 'mean', 'max'),
+ #                       meds = ('min')),
+ #                       impute = F) %>%
+ #                  #wisard::add_prop_predictors(categories = list("labs")) %>%
+ #                  wisard::add_diff_predictors(categories = list("labs")) %>%
+ #   wisard::add_outcome(obj = .,outcome_var = "SBP",outcome_stat = list("mean")) %>%
+ #   wisard::write_to(obj = .,write_file = NULL,most_recent = F)
 
  # 
  # 
