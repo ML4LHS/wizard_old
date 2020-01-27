@@ -467,10 +467,10 @@ write_to = function(obj,write_file = NULL,most_recent){
  #                       feature_stat = list(labs = c('min', 'mean', 'max'),
  #                       meds = ('min')),
  #                       impute = F) %>%
- #                  #wisard::add_prop_predictors(categories = list("labs")) %>%
+ #                  wisard::add_prop_predictors(categories = list("labs")) %>%
  #                  wisard::add_diff_predictors(categories = list("labs")) %>%
  #   wisard::add_outcome(obj = .,outcome_var = "SBP",outcome_stat = list("mean")) %>%
- #   wisard::write_to(obj = .,write_file = NULL,most_recent = F)
+ #   wisard::write_to(obj = .,write_file = NULL,most_recent = T)
 
  # 
  # 
