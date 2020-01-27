@@ -214,10 +214,10 @@ add_lagged_predictors = function ( obj ,
 #'
 #' Function to generate proportional variation between lagged features
 #' 
-#'  @param obj wizard object
-#'  @param categories List of categories to generate teh proportional variation feature
-#'  @return wizard object
-#'  @export 
+#' @param obj wizard object
+#' @param categories List of categories to generate teh proportional variation feature
+#' @return wizard object
+#' @export 
 
 
 add_prop_predictors = function(obj,categories = list()){
@@ -253,10 +253,10 @@ add_prop_predictors = function(obj,categories = list()){
 #'
 #' Function to generate iterated difference between lagged features
 #' 
-#'  @param obj wizard object
-#'  @param categories List of categories to generate the iterated difference feature
-#'  @return wizard object
-#'  @export 
+#' @param obj wizard object
+#' @param categories List of categories to generate the iterated difference feature
+#' @return wizard object
+#' @export 
 
 
 add_diff_predictors = function(obj,categories = list()){
@@ -454,7 +454,7 @@ write_to = function(obj,write_file = NULL,most_recent){
  # temporal_data = fread("Z://va_aki_project/datasets/temporal_data.csv") %>%
  #   as_tibble()
  # 
- # fixed_data = fread("Z://va_aki_project/datasets/fixed_data.csv") %>%
+ # fixed_data = data.table::fread("Z://va_aki_project/datasets/fixed_data.csv") %>%
  #   as_tibble()
  # 
  # wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
@@ -467,9 +467,9 @@ write_to = function(obj,write_file = NULL,most_recent){
  #                       feature_stat = list(labs = c('min', 'mean', 'max'),
  #                       meds = ('min')),
  #                       impute = F) %>%
- #                   wisard::add_prop_predictors(categories = list("labs")) %>%
- #                   wisard::add_diff_predictors(categories = list("labs")) %>%
- #   wisard::add_outcome(outcome_var = "SBP",outcome_stat = list("mean")) %>%
+ #                  # wisard::add_prop_predictors(categories = list("labs")) %>%
+ #                  # wisard::add_diff_predictors(categories = list("labs")) %>%
+ #   wisard::add_outcome(obj = .,outcome_var = "SBP",outcome_stat = list("mean")) %>%
  #   wisard::write_to(obj = .,write_file = NULL,most_recent = F)
 
  # 
@@ -483,6 +483,10 @@ write_to = function(obj,write_file = NULL,most_recent){
  # 
  # 
 
+ # dev_data =  disk.frame::csv_to_disk.frame(infile = "Z://va_aki_project/datasets/temporal_data.csv",
+ #                                           outdir = "Z://adharsh_hrqol_brfss/chunk_data",
+ #                                           shardby = "encounter_id",
+ #                                           backend = "data.table")
  
 # ## Checking the nchunks
 # 
