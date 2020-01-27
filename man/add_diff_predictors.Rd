@@ -6,12 +6,14 @@
 \usage{
 add_diff_predictors(obj, categories = list())
 }
+\arguments{
+\item{obj}{wizard object}
+
+\item{categories}{List of categories to generate the iterated difference feature}
+}
+\value{
+wizard object
+}
 \description{
 Function to generate iterated difference between lagged features
-}
-\details{
-@param obj wizard object
- @param categories List of categories to generate the iterated difference feature
- @return wizard object
- @export
 }

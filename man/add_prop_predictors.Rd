@@ -6,12 +6,14 @@
 \usage{
 add_prop_predictors(obj, categories = list())
 }
+\arguments{
+\item{obj}{wizard object}
+
+\item{categories}{List of categories to generate teh proportional variation feature}
+}
+\value{
+wizard object
+}
 \description{
 Function to generate proportional variation between lagged features
-}
-\details{
-@param obj wizard object
- @param categories List of categories to generate teh proportional variation feature
- @return wizard object
- @export
 }
