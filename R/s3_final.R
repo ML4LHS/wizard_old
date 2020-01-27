@@ -483,10 +483,7 @@ write_to = function(obj,write_file = NULL,most_recent){
  # 
  # 
 
- # dev_data =  disk.frame::csv_to_disk.frame(infile = "Z://va_aki_project/datasets/temporal_data.csv",
- #                                           outdir = "Z://adharsh_hrqol_brfss/chunk_data",
- #                                           shardby = "encounter_id",
- #                                           backend = "data.table")
+ 
  
 # ## Checking the nchunks
 # 

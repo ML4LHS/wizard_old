@@ -55,6 +55,7 @@ check_first_frame = .x %>%
     group_by(encounter_id,time,variable,max_time) %>% 
     summarise_each({{op}}, (value)) %>% 
     #summarise_each(funs(mean,min,max),value) %>% 
+    rename(slope = "wisard::slope(time,value)") %>% 
     ungroup() %>%  
     group_by(encounter_id,time) %>%
     gather(key = "key",

@@ -15,6 +15,9 @@ vignette: >
 
 # install.packages("devtools")
 library("devtools")
+library("lubridate")
+library("tidyverse")
+library("wisard")
 devtools::install_github("smeyer-umich/wisard", auth_token = "725cd269dcfd0b64fdeb5aa51a3e0a52193fdd3c")
 ```
 
@@ -25,6 +28,9 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
+temporal_file = file.path("Z://va_aki_project/datasets/check.csv")
+fixed_file = file.path("Z://va_aki_project/datasets/fixed_data.csv")
+
 ```
 
 # 1) Load in the fixed data and temporal data
@@ -32,102 +38,78 @@ knitr::opts_chunk$set(
 ```{r}
 library(tidyverse, quietly = TRUE)
 
-temporal_file = file.path("../inst/extdata/temporal_data.csv")
-fixed_file = file.path("../inst/extdata/fixed_data.csv")
 
-temporal_data =  data.table::fread(temporal_file) %>% 
-  dplyr::mutate(time = time %>% lubridate::as_datetime())
 
-temporal_data %>% head()
+
+dev_data =  disk.frame::csv_to_disk.frame(infile = temporal_file,                                      
+                                          outdir ="Z://va_aki_project/datasets/tmp",
+                                          shardby = "encounter_id",
+                                          backend = "data.table")
 
 # The fixed data should of type tibble, data.frame or disk frame.
-fixed_data = data.table::fread(fixed_file) %>% 
-  dplyr::mutate(time = admit_time %>% lubridate::as_datetime(), outcome = outcome %>% lubridate::as_datetime()) %>% 
-  as.data.frame()
-
+fixed_data = data.table::fread(fixed_file) %>% as_tibble()
 fixed_data %>% head()
 
 ```
 
-# 2) Generating the categorical column names. 
+# 2) Creating a wizard object. 
 
 ```{r}
-# input temporal_dataframe and the return is also a temporal_data frame.
-# The function columns the categorical columns as a variable with a binary value.
-temporal_data_2 = wisard::categorical_col_names_generator(temporal_data = temporal_data)
+# input temporal_dataframe, fixed dataframe 
+# return is a wizard object.
 
-temporal_data_2
+wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
+                            fixed_data = fixed_data) 
+ 
 ```
 
-# 3) Identifying the unique variables in the temporal dataset.
+# 3) Generating the lagged predictors for the window size and lookback.
 
 ```{r}
-# The input parameter is the temporal dataframe and the output is unique variables and their categories
-unique_columns = wisard::unique_variables(data = temporal_data)
-unique_columns
+#The input parameter are 
+#1) wizard object,
+#2) windowsize, 
+#3) lookback,
+#4) lookahead,
+#5) step
+#6) feature_stat
+#7) impute 
+# output is wizard object with updated wizard frame
+
+wizard_object = wisard::add_lagged_predictors(obj = wizard_object,
+                       window_size = list("meds" = lubridate::hours(6),"labs" = lubridate::hours(6)),
+                       lookback = list("meds" =lubridate:: hours(6), labs = lubridate::hours(48)),
+                       lookahead = lubridate::hours(30),
+                       step = lubridate::hours(3),
+                       feature_stat = list(labs = c('min', 'mean', 'max'),
+                       meds = ('min')),
+                       impute = F)
+wizard_object$wizard_frame                 
 ```
 
-# 4) Calling in the date_to_time function to convert the timestamps in the temporal data to Number relative to the admit time or initial time.
+# 4) Including the proportional and differential variation of lagged features.
 
 ```{r}
-# To convert the user argument which is a period object to a numeric value. It returns a list of values.
-period_measure = wisard::hour_to_number(window_size = lubridate::hours(6),lookback = lubridate::hours(48),lookahead = lubridate::hours(48),step = hours(3))
-# The input parameters are:
-#1)temporal_data
-#2) Fixed data frame
-#3) units : unit of the period object for eg.in hours(6) the unit is hours and seconds(6) unit is seconds.
-temporal_data = wisard::date_to_time(temporal_data = temporal_data, fixed_data = fixed_data, units = period_measure$units)
+wizard_object  = wisard::add_prop_predictors(obj = wizard_object,categories = list("labs")) %>%
+                  wisard::add_diff_predictors(categories = list("labs"))
+wizard_object$wizard_frame
 ```
 
-# 4) Generating the column names based on user specified summary stats.
+# 5) Generating the outcome features for analysis.
 
 ```{r}
-# The input parameters are:
-#1) temporal dataframe.
-#2) feature stat based on category
-column_names = wisard::colnames_generator(temporal_data,
-                               feature_stat = list(labs = c('min', 'mean', 'max'),
-                                                   meds = ('min')
-                               ),
-                               lag_display = list("meds" = T,"labs" = T),
-                               lag_compute = list("meds" = c("both"),
-                                                  "labs" = c("prop")),
-                               #lagged_feature_stat = list(labs = c('min', 'mean')),
-                               
-                               lookback = list("meds" = hours(7),"labs" = hours(48)),
-                               window_size = list("meds" = hours(1),"labs" = hours(6)) )
-# returns a list of column names
-all_variable_to_create = column_names[[1]]
+
+wizard_object  = wisard::add_outcome(obj = wizard_object,outcome_var = "SBP",outcome_stat = list("mean")) 
+
+wizard_object$wizard_frame
 ```
 
-
-# 5) Finally calling in the lagged feature generation function.
-
-```{r}
-result_frame = wisard::dummy_wisard(temporal_data = temporal_data,all_variable_to_create = all_variable_to_create,lag_variable_to_create = lag_variable_to_create,window_size = period_measure$window_size,outcome_var = NULL,outcome_stat = list("min"),lookahead = period_measure$lookahead,lookback = period_measure$lookback,step = period_measure$step,lag_display = list("meds" = T,"labs" = T),
-lag_comp = list("meds" = "both", "labs" = "prop"),recent_only = T,impute = T)
-result_frame %>% head()
-```
-
-#  Function to create a disk frame with lagged features.
+# 6) Finally writing the results to a disk frame object or file location
 
 ```{r}
 
-result = create_wisard(file = "a://b/c/d.csv",fixed_data = fixed_data,
-                       window_size = list("meds" = 6,"labs" = 6),
-                      lookback = list("meds" = 6, labs = 48),
-                      lookahead = 30,
-                      step = 3,
-                     feature_stat = list(labs = c('min', 'mean', 'max'),
-                      meds = ('min')),
-                     lag_display = list("meds" = T, "labs" = T),
-                     recent_only = F,
-                     lag_comp = list("meds" = "both", "labs" = "prop"),
-                     outcome_var = NULL,
-                     outcome_stat = list("mean","min",",max"),
-                     impute = T,
-  write_file = NULL)
+wizard_object = wisard::write_to(obj = wizard_object,write_file = NULL,most_recent = T)
 
-
+wizard_object$wizard_frame
 ```
 
