@@ -232,7 +232,7 @@ add_prop_predictors = function(obj,categories = list()){
                                                                                                                           lag_compute = "prop"
                                                                                                                     ))) ,
                                                   overwrite = T,
-                                                  overwrite = T,
+                                                 
                                                   shardby = "encounter_id",
                                                   backend = "data.table")
   
@@ -457,6 +457,7 @@ write_to = function(obj,write_file = NULL,most_recent){
  # fixed_data = data.table::fread("Z://va_aki_project/datasets/fixed_data.csv") %>%
  #   as_tibble()
  # 
+
  # wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
  #                            fixed_data = fixed_data) %>%
  #   wisard::add_lagged_predictors(obj = .,
@@ -467,8 +468,8 @@ write_to = function(obj,write_file = NULL,most_recent){
  #                       feature_stat = list(labs = c('min', 'mean', 'max'),
  #                       meds = ('min')),
  #                       impute = F) %>%
- #                  # wisard::add_prop_predictors(categories = list("labs")) %>%
- #                  # wisard::add_diff_predictors(categories = list("labs")) %>%
+ #                  wisard::add_prop_predictors(categories = list("labs")) %>%
+ #                  wisard::add_diff_predictors(categories = list("labs")) %>%
  #   wisard::add_outcome(obj = .,outcome_var = "SBP",outcome_stat = list("mean")) %>%
  #   wisard::write_to(obj = .,write_file = NULL,most_recent = F)
 
