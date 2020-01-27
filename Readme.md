@@ -1,4 +1,4 @@
-WIndowed Summarization for Auto Regressive Data (WISARD)
+WIndowed summariZation for AutoRegressive Data (wizard)
 ================
 
 The purpose for this package is to provide an all in one data
