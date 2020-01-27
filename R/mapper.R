@@ -9,7 +9,7 @@
 check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 3,  feature_stat = list(labs = c('min', 'mean', 'max'),
                                                                                                   meds = ('min'))){
   count = 1000
-  op = c(feature_stat[[.y$category]],"wisard::slope(time,value)")
+  op = c(feature_stat[[.y$category]],"slope(time,value)")
   print(op)
   times = 1
   #print(step)
@@ -55,7 +55,7 @@ check_first_frame = .x %>%
     group_by(encounter_id,time,variable,max_time) %>% 
     summarise_each({{op}}, (value)) %>% 
     #summarise_each(funs(mean,min,max),value) %>% 
-    rename(slope = "wisard::slope(time,value)") %>% 
+   
     ungroup() %>%  
     group_by(encounter_id,time) %>%
     gather(key = "key",
