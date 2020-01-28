@@ -9,7 +9,7 @@
 new_wizard = function(temporal_data = NA,
                       fixed_data = NA){
   ## Checking if the temporal data is a data.frame,data.table or a disk frame
-  stopifnot(disk.frame::is_disk.frame(temporal_data) || data.table::is.data.table(temporal_data) || data.frame::is.data.frame(temporal_data))
+  stopifnot(disk.frame::is_disk.frame(temporal_data) || data.table::is.data.table(temporal_data) || is.data.frame(temporal_data))
   
   ## If temporal data is of accepted type build a S3 object called wizard.
   
@@ -112,7 +112,7 @@ add_lagged_predictors = function ( obj ,
                                    feature_stat,
                                    impute){
   obj$feature_stat = feature_stat
-  obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wisard::categorical_col_names_generator(temporal_data = .)
+  obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wizard::categorical_col_names_generator(temporal_data = .)
   ),parallel = FALSE),
   outdir = "tmp1",
   overwrite = T,
@@ -127,14 +127,14 @@ add_lagged_predictors = function ( obj ,
       
       if(tolower(class(collect(sample_frac(obj$temporal_data,0.01))$time)) %in% c("character","period")){
         
-        period_measure = wisard::hour_to_number(lookback = lookback,window_size = window_size,lookahead = lookahead, step = step)
+        period_measure = wizard::hour_to_number(lookback = lookback,window_size = window_size,lookahead = lookahead, step = step)
         obj$lookback = period_measure$lookback
         obj$lookahead = period_measure$lookahead
         obj$window_size = period_measure$window_size
         obj$step = period_measure$step
         cat("step:",obj$step)
         
-        obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wisard::date_to_time(temporal_data = .,fixed_data = fixed_data,units = period_measure$units))) ,
+        obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wizard::date_to_time(temporal_data = .,fixed_data = fixed_data,units = period_measure$units))) ,
                                                       overwrite = T,
                                                       shardby = "encounter_id",
                                                       backend = "data.table")
@@ -177,7 +177,7 @@ add_lagged_predictors = function ( obj ,
   
   
   column_names_df = dplyr::bind_rows( column_names_df,
-                                      disk.frame::map(obj$temporal_data, ~wisard::unique_variables(.), lazy = F) %>% head()
+                                      disk.frame::map(obj$temporal_data, ~wizard::unique_variables(.), lazy = F) %>% head()
   )
   print(" Generating the unique names")
   column_names_df = column_names_df %>%
@@ -188,7 +188,7 @@ add_lagged_predictors = function ( obj ,
   
   
  
-  obj$wizard_frame =  disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wisard::lagged_feature(temporal_data = .,
+  obj$wizard_frame =  disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wizard::lagged_feature(temporal_data = .,
                                                                                                                    window_size = obj$window_size,
                                                                                                                       lookback = obj$lookback,
                                                                                                                       feature_stat = feature_stat,
@@ -226,7 +226,7 @@ add_prop_predictors = function(obj,categories = list()){
     cat("The lagged features are not found.")
   }
   
-  obj$prop_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wisard::iterative_lag_features(final_frame = ., 
+  obj$prop_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = ., 
                                                                                                                             categories = categories,
                                                                                                                           window_size = obj$window_size, 
                                                                                                                           lag_compute = "prop"
@@ -265,7 +265,7 @@ add_diff_predictors = function(obj,categories = list()){
   }
   
   
-  obj$diff_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wisard::iterative_lag_features(final_frame = ., 
+  obj$diff_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = ., 
                                                                                                                             categories = categories,
                                                                                                                             window_size = obj$window_size, 
                                                                                                                             lag_compute = "diff"
@@ -306,7 +306,7 @@ add_outcome = function(obj, outcome_var,outcome_stat = list()){
   obj$outcome_var = outcome_var
   obj$outcome_stat = outcome_stat
   
-  obj$outcome_table = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wisard::dummy_outcome_variable(temporal_data = ., 
+  obj$outcome_table = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wizard::dummy_outcome_variable(temporal_data = ., 
                                                                                                                           outcome_var = outcome_var,
                                                                                                                           window_size = obj$step, 
                                                                                                                           outcome_stat = outcome_stat,
@@ -383,7 +383,7 @@ write_to = function(obj,write_file = NULL,most_recent){
   ## calling a function which will spread and merge the data.
   
   
-  obj$wizard_frame = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wisard::final_spread_data(temporal_data = .,
+  obj$wizard_frame = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wizard::final_spread_data(temporal_data = .,
                                                                                                                            outcome_var = obj$outcome_var,
                                                                                                                            all_variables_to_create = all_variables_to_create
 
@@ -445,49 +445,5 @@ write_to = function(obj,write_file = NULL,most_recent){
 
 
 
-## To validate the function Loading the temporal dataframe and creating a wizard object.
-
-
-## To validate the function Loading the temporal dataframe and creating a wizard object.
-
- # temporal_data = fread("Z://va_aki_project/datasets/temporal_data.csv") %>%
- #   as_tibble()
- # 
- # fixed_data = data.table::fread("Z://va_aki_project/datasets/fixed_data.csv") %>%
- #   as_tibble()
- # 
-
- # wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
- #                            fixed_data = fixed_data) %>%
- #   wisard::add_lagged_predictors(obj = .,
- #                       window_size = list("meds" = hours(6),"labs" = hours(6)),
- #                       lookback = list("meds" = hours(6), labs = hours(48)),
- #                       lookahead = hours(30),
- #                       step = hours(3),
- #                       feature_stat = list(labs = c('min', 'mean', 'max'),
- #                       meds = ('min')),
- #                       impute = F) %>%
- #                  wisard::add_prop_predictors(categories = list("labs")) %>%
- #                  wisard::add_diff_predictors(categories = list("labs")) %>%
- #   wisard::add_outcome(obj = .,outcome_var = "SBP",outcome_stat = list("mean")) %>%
- #   wisard::write_to(obj = .,write_file = NULL,most_recent = T)
-
- # 
- # 
- # wizard_object$wizard_frame %>%
- #   collect() %>%
- #   arrange(encounter_id,time.y) %>%
- #   View()
- # 
- # 
- # 
- # 
-
- 
- 
-# ## Checking the nchunks
-# 
-# check_data = as.disk.frame(fixed_data, nchunks = nchunk(wizard_object$wizard_frame))
-# inner_join(check_data,wizard_object$wizard_frame,by = "encounter_id",merge_by_chunk_id = F)
 
 
