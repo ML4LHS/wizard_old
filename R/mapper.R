@@ -46,7 +46,7 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
 
 
 check_first_frame = .x %>%
-    mutate_at(vars(time), as.numeric) %>% 
+    mutate_at(vars(time,value), as.numeric) %>% 
     mutate(time = floor(time/temp_window_size)*temp_window_size) %>% 
     group_by(encounter_id,time,variable,max_time) %>% 
     summarise_each({{op}}, (value)) %>%  
