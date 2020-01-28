@@ -43,24 +43,18 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
   }
   }
   
-  # if(nrow(.x) <=0){
-  #   stop("Empty data frame")
-  # }
-  
-    
 
-check_first_frame = .x %>% 
+
+check_first_frame = .x %>%
     mutate_at(vars(time), as.numeric) %>% 
     mutate(time = floor(time/temp_window_size)*temp_window_size) %>% 
     group_by(encounter_id,time,variable,max_time) %>% 
-    summarise_each({{op}}, (value)) %>% 
-    #summarise_each(funs(mean,min,max),value) %>% 
-   
-    ungroup() %>%  
+    summarise_each({{op}}, (value)) %>%  
+    ungroup() %>% 
     group_by(encounter_id,time) %>%
     gather(key = "key",
            value = "value",
-           min:slope) %>% 
+           -encounter:-time) %>% 
     mutate(key = case_when( key == "n_distinct" ~ "n", T ~ key)) %>%
     ungroup() %>% 
     mutate(value = case_when( value %in% c(NaN,-Inf,Inf) ~ NA_real_, T ~ value) ) %>%
@@ -77,7 +71,7 @@ check_first_frame = .x %>%
     mutate(lag = min(time),category = .y$category) %>% 
     select(-max_time)
 
-#print("I ran")
+
   
   
   if ( step <= temp_window_size & length(.x$time[which(.x$time >= step)]) > 0){
@@ -87,8 +81,7 @@ check_first_frame = .x %>%
   )
 }
   else{
-    # check_first_frame  = check_first_frame %>%
-    #     filter( time %% step == 0) %>% 
+
       
     check_first_frame
   }
@@ -158,7 +151,7 @@ time_valid = temporal_data %>%
 
 
 
-#print("Did I come here")
+
 dummy_frame = dummy_frame %>% 
   left_join(time_valid,
             by = "encounter_id"
