@@ -5,6 +5,7 @@
 #' @param final_frame final df
 #' @param window_size window size
 #' @return lag frame
+#' @import data.table
 #' @export
 
 diff_feature = function(.x,.y,window_size, lag_compute){
