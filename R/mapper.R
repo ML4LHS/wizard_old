@@ -219,6 +219,7 @@ lagged_feature_generator = function(.x,.y,
 #' @param final_frame data frame of lagged features
 #' @param categories categories 
 #' @param window_size window size
+#' @export
 
 iterative_lag_features = function(final_frame,categories,window_size,lag_compute){
   
