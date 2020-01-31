@@ -54,7 +54,7 @@ check_first_frame = .x %>%
     group_by(encounter_id,time) %>%
     gather(key = "key",
            value = "value",
-           -encounter_id:-time) %>% 
+           -encounter_id:-max_time) %>% 
     mutate(key = case_when( key == "n_distinct" ~ "n", T ~ key)) %>%
     ungroup() %>% 
     mutate(value = case_when( value %in% c(NaN,-Inf,Inf) ~ NA_real_, T ~ value) ) %>%
