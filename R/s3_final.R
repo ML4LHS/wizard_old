@@ -21,7 +21,7 @@ new_wizard = function(temporal_data = NA,
     window_size = NA,
     lookahead = NA,
     step = NA,
-    column_df = NA,
+    column_names_df = NA,
     lag_display = list(),
     lag_compute = list(),
     feature_stat = NA,
@@ -340,7 +340,7 @@ write_to = function(obj,write_file = NULL,most_recent){
     cat("The lagged features are not found.")
   }
   
-  obj$lag_compute =obj$lag_compute[!is.na(wizard_object$lag_compute)]
+  #obj$lag_compute =obj$lag_compute[!is.na(wizard_object$lag_compute)]
   
   
   # Calling in the column name generator function to create all the column names.
