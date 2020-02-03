@@ -10,7 +10,7 @@
 diff_feature = function(.x,.y,window_size, lag_compute){
 
  
-  
+  .x %>% View()
 
   
   lag_frame = .x %>%
