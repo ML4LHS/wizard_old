@@ -9,8 +9,7 @@
 
 diff_feature = function(.x,.y,window_size, lag_compute){
 
- 
-  .x %>% View()
+
 
   
   lag_frame = .x %>%
@@ -30,7 +29,7 @@ diff_feature = function(.x,.y,window_size, lag_compute){
     dplyr::ungroup() %>%
     dplyr::mutate(variable = stringr::str_replace_all(variable, "\\d+",paste(lag_compute,lag_time,sep ="_"))) %>%
     dplyr::group_by(encounter_id,variable) %>% 
-    dplyr::mutate(new_value = data.table::shift(new_value, n = 1,type = "lag")) %>% 
+    #dplyr::mutate(new_value = data.table::shift(new_value, n = 1,type = "lag")) %>% 
    # dplyr::mutate(new_value = coalesce(value,new_value)) %>% 
     dplyr::ungroup() %>% 
     dplyr::select(-lead_value,-lag_time,-value,-lag_compute) %>% 
