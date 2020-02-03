@@ -10,7 +10,7 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
                                                                                                   meds = ('min'))){
   count = 1000
   op = c(feature_stat[[.y$category]],"wizard::slope(time,value)")
-  op = lapply(op, function(x) ifelse(x== "n", "sum(!is.na(.))", x))
+  #op = lapply(op, function(x) ifelse(x== "n", "sum(!is.na(.))", x))
   print(op)
   times = 1
   #print(step)
