@@ -13,7 +13,7 @@ diff_feature = function(.x,.y,window_size, lag_compute){
 
   
   lag_frame = .x %>%
-    dplyr::group_by(encounter_id,variable) %>%
+    dplyr::group_by(encounter_id,variable,key) %>%
     # arrange(encounter_id,variable) %>%
     dplyr::mutate(lead_value = data.table::shift(value,n =1,type = "lead") ) %>%
     dplyr::mutate(lag_compute = case_when(lag_compute == "both" ~ "prop/diff", T~ lag_compute)) %>% 
