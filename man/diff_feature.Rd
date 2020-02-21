@@ -4,7 +4,7 @@
 \alias{diff_feature}
 \title{Difference features}
 \usage{
-diff_feature(.x, .y, window_size, lag_compute)
+diff_feature(.x, .y, window_size, step, lag_compute)
 }
 \arguments{
 \item{window_size}{window size}

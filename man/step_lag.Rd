@@ -4,12 +4,14 @@
 \alias{step_lag}
 \title{Step lag function is a internal function to adjust to the step value.}
 \usage{
-step_lag(temporal_data, step, window_size, category)
+step_lag(temporal_data, step, stat, window_size, category)
 }
 \arguments{
 \item{temporal_data}{temporal data frame}
 
 \item{step}{step size}
+
+\item{stat}{category_wise feature_stat}
 
 \item{window_size}{window size}
 

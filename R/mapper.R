@@ -9,8 +9,17 @@
 check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 3,  feature_stat = list(labs = c('min', 'mean', 'max'),
                                                                                                   meds = ('min'))){
   count = 1000
-  op = c(feature_stat[[.y$category]],"wizard::slope(time,value)")
-  #op = lapply(op, function(x) ifelse(x== "n", "sum(!is.na(.))", x))
+  op = c()
+  for (i in feature_stat[[.y$category]]){
+    
+    if(i == "n"){
+      op = c(op,"length(!is.na(value))")
+    }
+    else{
+      op = c(op,i)
+    }
+  }
+  op = c(op,"slope(time,value)")
   print(op)
   times = 1
   #print(step)
@@ -26,14 +35,14 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
       cat ("window_size:",temp_window_size)
     }
     else{
-      stop("The step size is relatively large for the window size")
+      stop("The step size is relatively larger for the window size")
     }
   }
   else{
   if( temp_window_size %% step == 0){
   print("Validating if the window_size is a multiple of the step size")
   if (step < temp_window_size){
-    print("step is lesser than I thought")
+    print("step is smaller than the window")
     #times = temp_window_size/step
     temp_window_size = step
   }
@@ -56,7 +65,7 @@ check_first_frame = .x %>%
     gather(key = "key",
            value = "value",
            -encounter_id:-max_time) %>% 
-    mutate(key = case_when( key == "n_distinct" ~ "n", T ~ key)) %>%
+    mutate(key = case_when( key == "length" ~ "n", T ~ key)) %>%
     ungroup() %>% 
     mutate(value = case_when( value %in% c(NaN,-Inf,Inf) ~ NA_real_, T ~ value) ) %>%
     mutate(time = as.numeric(as.character(time))) %>%
@@ -78,7 +87,7 @@ check_first_frame = .x %>%
   if ( step <= temp_window_size & length(.x$time[which(.x$time >= step)]) > 0){
   check_first_frame = bind_rows(
     check_first_frame,
-    wizard::step_lag(temporal_data = .x, step = step, window_size = as.numeric(window_size[[.y$category]]),category = .y$category)
+    wizard::step_lag(temporal_data = .x, step = step,stat = feature_stat[[.y$category]], window_size = as.numeric(window_size[[.y$category]]),category = .y$category)
   )
 }
   else{
@@ -94,42 +103,58 @@ check_first_frame = .x %>%
 #' Step lag function is a internal function to adjust to the step value.
 #' @param  temporal_data temporal data frame
 #' @param step step size
+#' @param stat category_wise feature_stat
 #' @param window_size window size
 #' @param category category of the feature
 #' @export
-step_lag =  function ( temporal_data, step,window_size,category){
+step_lag =  function ( temporal_data, step,stat,window_size,category){
 
   print(category)
+  
+  op = c()
+  for (i in stat){
+    
+    if(i == "n"){
+      op = c(op,"length(!is.na(value))")
+    }
+    else{
+      op = c(op,i)
+    }
+  }
   
 
 dummy_frame = NULL
 for ( i in seq(0, max(temporal_data$time, na.rm = T),step))
 {
- dummy_frame = bind_rows( dummy_frame,
-  temporal_data %>% 
-  mutate (time = floor(time / step)*step) %>% 
-  #mutate(check = time-6) %>% 
-  filter(time < i & time>= i-window_size) %>% 
-  group_by(encounter_id,variable,max_time) %>%
-  summarise_each(funs(min,max,mean),(value))%>% 
-  ungroup() %>% 
-  as_data_frame() %>% 
-    mutate(time = i)#%>% 
-    #mutate(time = i)
-)
-# print(i)
+  dummy_frame = bind_rows( dummy_frame,
+                           temporal_data %>% 
+                             mutate (time = floor(time / step)*step) %>% 
+                             #mutate(check = time-6) %>% 
+                             filter(time < i & time>= i-window_size) %>% 
+                             group_by(encounter_id,variable,max_time) %>%
+                             summarise_each({{op}},(value))%>%
+                             #summarise_each(funs(min,max,mean),(value))%>% 
+                             ungroup() %>% 
+                             as_data_frame() %>% 
+                             mutate(time = i)#%>% 
+                           #mutate(time = i)
+  )
+  # print(i)
 } 
 
 #dummy_frame %>% View()
 dummy_frame = dummy_frame %>%  
-  group_by(encounter_id,time,max_time) %>%
+  group_by(encounter_id,time,max_time) %>% 
   gather(key = "key",
          value = "value",
-         min:mean) %>% 
-  mutate(key = case_when( key == "n_distinct" ~ "n", T ~ key)) %>%
+         -encounter_id:-max_time,-time) %>% 
+  # gather(key = "key",
+  #        value = "value",
+  #        min:mean) %>% 
+  mutate(key = case_when( key == "length" ~ "n", T ~ key)) %>%
   ungroup() %>%
-  mutate(value = case_when( value %in% c(NaN,-Inf,Inf) ~ NA_real_, T ~ value) ) %>%
-  mutate(time = as.numeric(as.character(time))) %>%
+  mutate(value = case_when( value %in% c(NaN,-Inf,Inf) ~ NA_real_, T ~ as.numeric(value)) ) %>%
+  mutate(time = as.numeric((time))) %>% 
   #mutate(time = time - min(time[which(time >= 0)])) %>% 
   mutate( time = factor( time , levels = seq( min(time,na.rm = T),max(time,na.rm = T), step))) %>% 
   complete(encounter_id,variable,key,time) %>% 
@@ -211,6 +236,9 @@ lagged_feature_generator = function(.x,.y,
                                      dplyr::mutate(category = .y$category)
     )
   
+  }
+  else{
+    final_frame = .x
   }
   final_frame
 }

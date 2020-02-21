@@ -141,7 +141,7 @@ colnames_generator = function( temporal_data,
   # else{
   #   return(list(all_variables_to_create))
   # }
-  return(list(all_variables_to_create,lag_variables_to_create))
+  return(list(all_variables_to_create %>% unique(),lag_variables_to_create %>% unique()))
   
 }
 
