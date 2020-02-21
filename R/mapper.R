@@ -19,7 +19,7 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
       op = c(op,i)
     }
   }
-  op = c(op,"slope(time,value)")
+  op = c(op,"wizard::slope(time,value)")
   print(op)
   times = 1
   #print(step)
@@ -65,7 +65,7 @@ check_first_frame = .x %>%
     gather(key = "key",
            value = "value",
            -encounter_id:-max_time) %>% 
-    mutate(key = case_when( key == "length" ~ "n", T ~ key)) %>%
+    mutate(key = case_when( key == "length" ~ "n", key == "wizard::slope" ~"slope",T ~ key)) %>%
     ungroup() %>% 
     mutate(value = case_when( value %in% c(NaN,-Inf,Inf) ~ NA_real_, T ~ value) ) %>%
     mutate(time = as.numeric(as.character(time))) %>%
