@@ -88,7 +88,7 @@ colnames_generator = function( temporal_data,
                                                                               dplyr::pull(variable),
                                                                             feature_stat[[as.name(j)]],
                                                                             ifelse(lag_compute[[j]] == "both",tibble("comp" = c("prop","diff")) %>% distinct(comp) ,lag_compute[[j]]) ,
-                                                                            seq(1, ifelse(max_lag>1,max_lag-1,1), by = 1)) %>%
+                                                                            seq(0, ifelse(max_lag>1,max_lag-1,1), by = 1)) %>%
                                          tidyr::unnest() %>% 
                                          dplyr::arrange(Var1, Var2, Var3 , Var4) %>%
                                          tidyr::unite(variable_names, c(Var1,Var2,Var3,Var4)) %>%

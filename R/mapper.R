@@ -13,7 +13,7 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
   for (i in feature_stat[[.y$category]]){
     
     if(i == "n"){
-      op = c(op,"length(!is.na(value))")
+      op = c(op,"length(na.omit(value))")
     }
     else{
       op = c(op,i)
@@ -115,7 +115,7 @@ step_lag =  function ( temporal_data, step,stat,window_size,category){
   for (i in stat){
     
     if(i == "n"){
-      op = c(op,"length(!is.na(value))")
+      op = c(op,"length(na.omit(value))")
     }
     else{
       op = c(op,i)
