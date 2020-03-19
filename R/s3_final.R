@@ -145,7 +145,7 @@ add_lagged_predictors = function ( obj ,
     obj$categorical_columns = disk.frame::disk.frame(file.path(getwd(),"temporal_1"))
   }
   
-  cat_call = disk.frame::map(obj$temporal_data, ~ wizard::categorical_col_names_generator(temporal_data = .,obj = obj),lazy = F)
+  cat_call = disk.frame::cmap(obj$temporal_data, ~ wizard::categorical_col_names_generator(temporal_data = .,obj = obj),lazy = F)
   
   obj$temporal_data = obj$categorical_columns
   obj$categorical_columns = NULL
@@ -173,7 +173,7 @@ add_lagged_predictors = function ( obj ,
           obj$date_time = disk.frame::disk.frame(file.path(getwd(),"date_time"))
         }
         
-        date_call = disk.frame::map(obj$temporal_data,~wizard::date_to_time(temporal_data = .,fixed_data = obj$fixed_data,units = period_measure$units,obj = obj),lazy = F)
+        date_call = disk.frame::cmap(obj$temporal_data,~wizard::date_to_time(temporal_data = .,fixed_data = obj$fixed_data,units = period_measure$units,obj = obj),lazy = F)
         obj$temporal_data = obj$date_time
         rm(date_call)
         obj$date_time = NULL
@@ -216,7 +216,7 @@ add_lagged_predictors = function ( obj ,
   
   
   column_names_df = dplyr::bind_rows( column_names_df,
-                                      disk.frame::map(obj$temporal_data, ~wizard::unique_variables(.), lazy = F) %>% head()
+                                      disk.frame::cmap(obj$temporal_data, ~wizard::unique_variables(.), lazy = F) %>% head()
   )
   print(" Generating the unique names")
   column_names_df = column_names_df %>%
@@ -234,7 +234,7 @@ add_lagged_predictors = function ( obj ,
     unlink(file.path(getwd(),"wizard_frame"),force = T,recursive = T)
     obj$wizard_frame = disk.frame::disk.frame(file.path(getwd(),"wizard_frame"))
   }
-  # obj$wizard_frame =  disk.frame::as.disk.frame(disk.frame::collect(disk.frame::map(obj$temporal_data, ~ lagged_feature(temporal_data = .,
+  # obj$wizard_frame =  disk.frame::as.disk.frame(disk.frame::collect(disk.frame::cmap(obj$temporal_data, ~ lagged_feature(temporal_data = .,
   #                                                                                                                  window_size = obj$window_size,
   #                                                                                                                     lookback = obj$lookback,
   #                                                                                                                     feature_stat = feature_stat,
@@ -245,7 +245,7 @@ add_lagged_predictors = function ( obj ,
   #                                                                  backend = "data.table")
   # 
   
-  dummy = (disk.frame::map(obj$temporal_data, ~ wizard::lagged_feature(temporal_data = .,
+  dummy = (disk.frame::cmap(obj$temporal_data, ~ wizard::lagged_feature(temporal_data = .,
                                                                obj = obj,
                                                                window_size = obj$window_size,
                                                                lookback = obj$lookback,
@@ -288,7 +288,7 @@ add_prop_predictors = function(obj,categories = list()){
     obj$prop_predictors = disk.frame::disk.frame(file.path(getwd(),"prop_predictors"))
   }
   
-  dummy= (disk.frame::map(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = .,
+  dummy= (disk.frame::cmap(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = .,
                                                                      obj = obj,
                                                                      categories = categories,
                                                                      window_size = obj$window_size, 
@@ -336,7 +336,7 @@ add_diff_predictors = function(obj,categories = list()){
     obj$diff_predictors = disk.frame::disk.frame(file.path(getwd(),"diff_predictors"))
   }
   
-  dummy = disk.frame::map(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = ., 
+  dummy = disk.frame::cmap(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = ., 
                                                                       obj = obj,
                                                                       categories = categories,
                                                                       window_size = obj$window_size, 
@@ -386,7 +386,7 @@ add_outcome = function(obj, outcome_var,outcome_stat = list()){
     obj$outcome_table = disk.frame::disk.frame(file.path(getwd(),"outcome_table"))
   }
   
-  # obj$outcome_table = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ dummy_outcome_variable(temporal_data = ., 
+  # obj$outcome_table = disk.frame::as.disk.frame(dplyr::collect(disk.frame::cmap(obj$temporal_data, ~ dummy_outcome_variable(temporal_data = ., 
   #                                                                                                                         outcome_var = outcome_var,
   #                                                                                                                         window_size = obj$step, 
   #                                                                                                                         outcome_stat = outcome_stat,
@@ -398,7 +398,7 @@ add_outcome = function(obj, outcome_var,outcome_stat = list()){
   # 
   # 
   
-  outcome_call = disk.frame::map(obj$temporal_data, ~ wizard::dummy_outcome_variable(temporal_data = ., 
+  outcome_call = disk.frame::cmap(obj$temporal_data, ~ wizard::dummy_outcome_variable(temporal_data = ., 
                                                                              outcome_var = outcome_var,
                                                                              window_size = obj$step, 
                                                                              outcome_stat = outcome_stat,
@@ -480,7 +480,7 @@ write_to = function(obj,write_file = NULL,most_recent){
     obj$result_frame = disk.frame::disk.frame(file.path(getwd(),"result_frame"))
   }
   
-  result_call = disk.frame::map(obj$wizard_frame, ~ wizard::final_spread_data(temporal_data = .,
+  result_call = disk.frame::cmap(obj$wizard_frame, ~ wizard::final_spread_data(temporal_data = .,
                                                                       outcome_var = obj$outcome_var,
                                                                       all_variables_to_create = all_variables_to_create,
                                                                       obj = obj

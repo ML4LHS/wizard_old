@@ -83,6 +83,9 @@ hour_to_number = function(window_size = NULL,lookback =NULL,lookahead = NULL, st
       }
       
     }
+    else if (step == 0){
+      units = "hours"
+    }
     else{
       stop(" The step variable should be a valid period object.")
     }
