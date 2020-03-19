@@ -12,26 +12,27 @@
 #'
 
 dummy_outcome_variable =  function( temporal_data,
+                                    obj,
                                     outcome_var = NULL,
                                     outcome_stat = list("mean"),
                                     lookahead = 30,
                                     window_size = 6
 ){
-
+  
   max_time = max(temporal_data %>% dplyr::filter(variable == outcome_var) %>% dplyr::select(time), na.rm = T)
   time_period = floor(max_time/window_size)*window_size
   print(time_period)
   k = dplyr::if_else(min(temporal_data$time, na.rm = T)<0,0,min(temporal_data$time, na.rm = T))
   min_time = k
   outcome_table = NULL
-
+  
   while(k < time_period)
   {
     
     temporal_data_k = temporal_data %>%
       dplyr::select(time,variable,value,encounter_id) %>%
       dplyr::mutate(time = floor(time/window_size)*window_size,
-             time = time - k) %>%
+                    time = time - k) %>%
       dplyr::mutate_at(vars(value), as.numeric) %>%
       #group_by(encounter_id,
       # time) %>%
@@ -42,10 +43,10 @@ dummy_outcome_variable =  function( temporal_data,
       temporal_data_k = temporal_data_k %>%
         dplyr::group_by(encounter_id,time) %>%
         dplyr::mutate(value = dplyr::case_when(operation == "mean"~ mean(value,na.rm =TRUE),
-                                 operation == "min"~min(value,na.rm =TRUE),
-                                 operation == "max" ~ max(value,na.rm =TRUE),
-                                 T ~ NA_real_),
-               variable = paste("OUTCOME",operation,outcome_var,lookahead,sep = "_")) %>%
+                                               operation == "min"~min(value,na.rm =TRUE),
+                                               operation == "max" ~ max(value,na.rm =TRUE),
+                                               T ~ NA_real_),
+                      variable = paste("OUTCOME",operation,outcome_var,lookahead,sep = "_")) %>%
         dplyr::ungroup() %>%
         dplyr::filter(!is.na(value)) %>%
         #filter(value != -Inf) %>%
@@ -62,10 +63,11 @@ dummy_outcome_variable =  function( temporal_data,
         dplyr::mutate(time = floor(k) , lag = min(temporal_data$time))
       outcome_table = dplyr::bind_rows(outcome_table, temporal_data_k)
     }
-
+    
     k = k+ window_size
   }
-
-  return(outcome_table)
-
+  
+  disk.frame::add_chunk(obj$outcome_table,outcome_table)
+  rm(outcome_table)
+  
 }

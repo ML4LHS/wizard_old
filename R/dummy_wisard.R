@@ -8,21 +8,26 @@
 #' @export
 
 lagged_feature =  function(temporal_data = NA,
-                              window_size = NA,
-                              step = NA,
-                              lookback = NA,
-                              feature_stat = NA,
-                              impute = F){
-  
+                           obj = obj,
+                           window_size = NA,
+                           step = NA,
+                           lookback = NA,
+                           feature_stat = NA,
+                           impute = F){
+  start = Sys.time()
   first_frame = temporal_data %>% 
     group_by(encounter_id) %>% 
     mutate(max_time = max(time,na.rm = T)) %>% 
     ungroup() %>% 
     group_by(category) %>% 
-    group_map(~wizard::check_mapper(.x = .x ,.y = .y,window_size = window_size,step = step,feature_stat = feature_stat)) %>% 
+    group_map(~wizard::check_mapper(.x = .x ,.y = .y,window_size = window_size,step = step,lookback = lookback,feature_stat = feature_stat)) %>% 
     bind_rows() 
   
+  #inter <<- first_frame %>% as_tibble()
+  
   print("Computed the first frame")
+  
+  interm <<- first_frame %>% as_tibble()
   
   final_frame = first_frame %>% 
     group_by(category) %>% 
@@ -31,7 +36,7 @@ lagged_feature =  function(temporal_data = NA,
   
   print("Computed the final frame as well!!!")
   
- 
+  #inter <<- final_frame %>% as_tibble()
   
   if (impute){
     #print("I'm here")
@@ -42,9 +47,13 @@ lagged_feature =  function(temporal_data = NA,
       dplyr::ungroup()
     
   }
+  
   print("Finished imputing data")
-
-  final_frame
+  
+  obj$wizard_frame = disk.frame::add_chunk(obj$wizard_frame,final_frame)
+  rm(final_frame,first_frame)
+  
+  #final_frame
 }
 
 #' final spread data
@@ -56,7 +65,7 @@ lagged_feature =  function(temporal_data = NA,
 
 
 
-final_spread_data = function(temporal_data,outcome_var,all_variables_to_create){
+final_spread_data = function(temporal_data,outcome_var,all_variables_to_create,obj){
   
   print(outcome_var)
   
@@ -75,6 +84,9 @@ final_spread_data = function(temporal_data,outcome_var,all_variables_to_create){
       dplyr::ungroup()
   }
   else{
+    
+    final_temp <<- temporal_data
+    
     final_frame = temporal_data %>%
       select(-category) %>% 
       dplyr::mutate(variable = factor(variable, levels = all_variables_to_create)) %>%
@@ -93,7 +105,8 @@ final_spread_data = function(temporal_data,outcome_var,all_variables_to_create){
   final_frame = final_frame %>%
     dplyr::arrange(encounter_id,time)
   
-  final_frame
+  disk.frame::add_chunk(obj$result_frame, final_frame)
+  rm(final_frame)
 }
 
 

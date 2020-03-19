@@ -17,8 +17,9 @@ vignette: >
 library("devtools")
 library("lubridate")
 library("tidyverse")
-library("wisard")
-devtools::install_github("smeyer-umich/wisard", auth_token = "725cd269dcfd0b64fdeb5aa51a3e0a52193fdd3c")
+library("wizard")
+library("data.table")
+devtools::install_github("ml4lhs/wizard")
 ```
 
 
@@ -30,6 +31,8 @@ knitr::opts_chunk$set(
 
 temporal_file = file.path("Z://va_aki_project/datasets/check.csv")
 fixed_file = file.path("Z://va_aki_project/datasets/fixed_data.csv")
+
+
 
 ```
 
@@ -48,7 +51,6 @@ dev_data =  disk.frame::csv_to_disk.frame(infile = temporal_file,
 
 # The fixed data should of type tibble, data.frame or disk frame.
 fixed_data = data.table::fread(fixed_file) %>% as_tibble()
-fixed_data %>% head()
 
 ```
 
@@ -58,7 +60,9 @@ fixed_data %>% head()
 # input temporal_dataframe, fixed dataframe 
 # return is a wizard object.
 
-wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
+
+
+wizard_object = wizard::build_wizard_object(temporal_data = dev_data,
                             fixed_data = fixed_data) 
  
 ```
@@ -76,22 +80,22 @@ wizard_object = wisard::build_wizard_object(temporal_data = dev_data,
 #7) impute 
 # output is wizard object with updated wizard frame
 
-wizard_object = wisard::add_lagged_predictors(obj = wizard_object,
-                       window_size = list("meds" = lubridate::hours(6),"labs" = lubridate::hours(6)),
-                       lookback = list("meds" =lubridate:: hours(6), labs = lubridate::hours(48)),
-                       lookahead = lubridate::hours(30),
-                       step = lubridate::hours(3),
-                       feature_stat = list(labs = c('min', 'mean', 'max'),
-                       meds = ('min')),
-                       impute = F)
-wizard_object$wizard_frame                 
+wizard_object =  wizard::add_lagged_predictors(obj = wizard_object,
+                                window_size = list("meds" = lubridate::hours(6),"labs" = lubridate::hours(6)),
+                                lookback = list("meds" = lubridate::hours(6), labs = lubridate::hours(48)),
+                                lookahead = lubridate::hours(30),
+                                step = lubridate::hours(3),
+                                feature_stat = list(labs = c('min', 'mean', 'max'),
+                                                    meds = ('min')),
+                                impute = F)
+wizard_object$wizard_frame                
 ```
 
 # 4) Including the proportional and differential variation of lagged features.
 
 ```{r}
-wizard_object  = wisard::add_prop_predictors(obj = wizard_object,categories = list("labs")) %>%
-                  wisard::add_diff_predictors(categories = list("labs"))
+wizard_object  = wizard::add_prop_predictors(obj = wizard_object,categories = list("labs")) %>%
+                  wizard::add_diff_predictors(categories = list("labs"))
 wizard_object$wizard_frame
 ```
 
@@ -99,7 +103,7 @@ wizard_object$wizard_frame
 
 ```{r}
 
-wizard_object  = wisard::add_outcome(obj = wizard_object,outcome_var = "SBP",outcome_stat = list("mean")) 
+wizard_object  = wizard::add_outcome(obj = wizard_object,outcome_var = "SBP",outcome_stat = list("mean")) 
 
 wizard_object$wizard_frame
 ```
@@ -108,7 +112,7 @@ wizard_object$wizard_frame
 
 ```{r}
 
-wizard_object = wisard::write_to(obj = wizard_object,write_file = NULL,most_recent = T)
+wizard_object = wizard::write_to(obj = wizard_object,write_file = NULL,most_recent = T)
 
 wizard_object$wizard_frame
 ```

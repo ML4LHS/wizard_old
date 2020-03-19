@@ -29,7 +29,8 @@ new_wizard = function(temporal_data = NA,
     prop_predictors = NA,
     diff_predictors = NA,
     outcome_var = NA,
-    outcome_stat = NA
+    outcome_stat = NA,
+    outcome_table = NA
     ),class = "wizard"
   )
 }
@@ -46,23 +47,45 @@ new_wizard = function(temporal_data = NA,
 
 
 build_wizard_object = function( temporal_data ,
-                                fixed_data){
+                                fixed_data,
+                                nchunk){
   
   
-  if (temporal_data == ""){
+  if (is.na(temporal_data) || temporal_data == ''){
     stop(" Enter a valid file location")
   }
-  else if (class(temporal_data)[1] == "character"){
-    cat("Reading in the file from the file system:",temporal_data)
-    dev_data =  disk.frame::csv_to_disk.frame(infile = temporal_data,
-                                              outdir = "Z://adharsh_hrqol_brfss/chunk_data",
-                                              shardby = "encounter_id",
-                                              backend = "data.table")
+  
+  else if (class(temporal_data) == "character"){
     
+    cat("Reading in the file from the file system:",temporal_data)
+    
+    if(is.na(nchunk)){
+      
+      dev_data =  disk.frame::csv_to_disk.frame(infile = temporal_data,
+                                                outdir = file.path(getwd(),"dev_data"),
+                                                shardby = "encounter_id",
+                                                backend = "data.table")
+    }
+    else{
+      dev_data =  disk.frame::csv_to_disk.frame(infile = temporal_data,
+                                                outdir = file.path(getwd(),"dev_data"),
+                                                shardby = "encounter_id",
+                                                nchunks = nchunk,
+                                                backend = "data.table")
+    }
+    cat("I'm done with loading the data")
+    
+    obj = new_wizard(temporal_data = dev_data,
+                     fixed_data = fixed_data)
   }
   
-  obj = new_wizard(temporal_data = temporal_data,
-                   fixed_data = fixed_data)
+  else{
+    
+    obj = new_wizard(temporal_data = temporal_data ,
+                     fixed_data = fixed_data)
+  }
+  
+  cat("Loaded the wizard object")
   
   obj
   
@@ -112,14 +135,22 @@ add_lagged_predictors = function ( obj ,
                                    feature_stat,
                                    impute){
   obj$feature_stat = feature_stat
-  obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wizard::categorical_col_names_generator(temporal_data = .)
-  ),parallel = FALSE),
-  outdir = "tmp1",
-  overwrite = T,
-  shardby = "encounter_id",
-  backend = "data.table")
+  if(!dir.exists(file.path(getwd(),"temporal_1"))){
+    
+    obj$categorical_columns = disk.frame::disk.frame(file.path(getwd(),"temporal_1"))
+    
+  }
+  else{
+    unlink(file.path(getwd(),"temporal_1"),force = T,recursive = T)
+    obj$categorical_columns = disk.frame::disk.frame(file.path(getwd(),"temporal_1"))
+  }
   
+  cat_call = disk.frame::map(obj$temporal_data, ~ wizard::categorical_col_names_generator(temporal_data = .,obj = obj),lazy = F)
+  
+  obj$temporal_data = obj$categorical_columns
+  obj$categorical_columns = NULL
   print("Finished generating categorical names")
+  rm(cat_call)
   
   if(length(lapply(lookback,function(x){class(x)}) %>% unique) == 1 & length(lapply(window_size,function(x){class(x)}) %>% unique) == 1){
     
@@ -134,10 +165,18 @@ add_lagged_predictors = function ( obj ,
         obj$step = period_measure$step
         cat("step:",obj$step)
         
-        obj$temporal_data = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wizard::date_to_time(temporal_data = .,fixed_data = fixed_data,units = period_measure$units))) ,
-                                                      overwrite = T,
-                                                      shardby = "encounter_id",
-                                                      backend = "data.table")
+        if(!dir.exists(file.path(getwd(),"date_time"))){
+          obj$date_time = disk.frame::disk.frame(file.path(getwd(),"date_time"))
+        }
+        else{
+          unlink(file.path(getwd(),"date_time"),force = T,recursive = T)
+          obj$date_time = disk.frame::disk.frame(file.path(getwd(),"date_time"))
+        }
+        
+        date_call = disk.frame::map(obj$temporal_data,~wizard::date_to_time(temporal_data = .,fixed_data = obj$fixed_data,units = period_measure$units,obj = obj),lazy = F)
+        obj$temporal_data = obj$date_time
+        rm(date_call)
+        obj$date_time = NULL
        
       }
       
@@ -188,21 +227,36 @@ add_lagged_predictors = function ( obj ,
   
   
  
-  obj$wizard_frame =  disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wizard::lagged_feature(temporal_data = .,
-                                                                                                                   window_size = obj$window_size,
-                                                                                                                      lookback = obj$lookback,
-                                                                                                                      feature_stat = feature_stat,
-                                                                                                                      step = obj$step,
-                                                                                                                      impute = impute))) ,
-                                                                   overwrite = T,
-                                                                   shardby = "encounter_id",
-                                                                   backend = "data.table")
+  if(!dir.exists(file.path(getwd(),"wizard_frame"))){
+    obj$wizard_frame = disk.frame::disk.frame(file.path(getwd(),"wizard_frame"))
+  }
+  else{
+    unlink(file.path(getwd(),"wizard_frame"),force = T,recursive = T)
+    obj$wizard_frame = disk.frame::disk.frame(file.path(getwd(),"wizard_frame"))
+  }
+  # obj$wizard_frame =  disk.frame::as.disk.frame(disk.frame::collect(disk.frame::map(obj$temporal_data, ~ lagged_feature(temporal_data = .,
+  #                                                                                                                  window_size = obj$window_size,
+  #                                                                                                                     lookback = obj$lookback,
+  #                                                                                                                     feature_stat = feature_stat,
+  #                                                                                                                     step = obj$step,
+  #                                                                                                                     impute = impute))) ,
+  #                                                                  overwrite = T,
+  #                                                                  shardby = "encounter_id",
+  #                                                                  backend = "data.table")
+  # 
   
-
+  dummy = (disk.frame::map(obj$temporal_data, ~ wizard::lagged_feature(temporal_data = .,
+                                                               obj = obj,
+                                                               window_size = obj$window_size,
+                                                               lookback = obj$lookback,
+                                                               feature_stat = feature_stat,
+                                                               step = obj$step,
+                                                               impute = impute),lazy = F))
   
+  rm(dummy)
   print("Finished Generating lagged features")
   
-  obj$lagged_features = TRUE
+  obj$lagged_predictors = TRUE
   obj
   
   
@@ -226,14 +280,23 @@ add_prop_predictors = function(obj,categories = list()){
     cat("The lagged features are not found.")
   }
   
-  obj$prop_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = ., 
-                                                                                                                            categories = categories,
-                                                                                                                          window_size = obj$window_size, 
-                                                                                                                          lag_compute = "prop"
-                                                                                                                    ))) ,
-                                                  overwrite = T,
-                                                  shardby = "encounter_id",
-                                                  backend = "data.table")
+  if(!dir.exists(file.path(getwd(),"prop_predictors"))){
+    obj$prop_predictors = disk.frame::disk.frame(file.path(getwd(),"prop_predictors"))
+  }
+  else{
+    unlink(file.path(getwd(),"prop_predictors"),force = T, recursive = T)
+    obj$prop_predictors = disk.frame::disk.frame(file.path(getwd(),"prop_predictors"))
+  }
+  
+  dummy= (disk.frame::map(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = .,
+                                                                     obj = obj,
+                                                                     categories = categories,
+                                                                     window_size = obj$window_size, 
+                                                                     step = obj$step,
+                                                                     lag_compute = "prop"
+  ),lazy = F)) 
+  
+  rm(dummy)
   
   for (i in categories){
     if (i %in% names(obj$lag_compute)){
@@ -265,14 +328,23 @@ add_diff_predictors = function(obj,categories = list()){
   }
   
   
-  obj$diff_predictors = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = ., 
-                                                                                                                            categories = categories,
-                                                                                                                            window_size = obj$window_size, 
-                                                                                                                            lag_compute = "diff"
-  ))) ,
-  overwrite = T,
-  shardby = "encounter_id",
-  backend = "data.table")
+  if(!dir.exists(file.path(getwd(),"diff_predictors"))){
+    obj$diff_predictors = disk.frame::disk.frame(file.path(getwd(),"diff_predictors"))
+  }
+  else{
+    unlink(file.path(getwd(),"diff_predictors"),force = T,recursive = T)
+    obj$diff_predictors = disk.frame::disk.frame(file.path(getwd(),"diff_predictors"))
+  }
+  
+  dummy = disk.frame::map(obj$wizard_frame, ~ wizard::iterative_lag_features(final_frame = ., 
+                                                                      obj = obj,
+                                                                      categories = categories,
+                                                                      window_size = obj$window_size, 
+                                                                      step = obj$step,
+                                                                      lag_compute = "diff"
+  ),lazy = F) 
+  
+  rm(dummy)
   
   for (i in categories){
     if (i %in% names(obj$lag_compute)){
@@ -306,16 +378,34 @@ add_outcome = function(obj, outcome_var,outcome_stat = list()){
   obj$outcome_var = outcome_var
   obj$outcome_stat = outcome_stat
   
-  obj$outcome_table = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ wizard::dummy_outcome_variable(temporal_data = ., 
-                                                                                                                          outcome_var = outcome_var,
-                                                                                                                          window_size = obj$step, 
-                                                                                                                          outcome_stat = outcome_stat,
-                                                                                                                          lookahead = obj$lookahead
-  ))) ,
-  overwrite = TRUE,
-  shardby = "encounter_id",
-  backend = "data.table")
+  if(!dir.exists(file.path(getwd(),"outcome_table"))){
+    obj$outcome_table = disk.frame::disk.frame(file.path(getwd(),"outcome_table"))
+  }
+  else{
+    unlink(file.path(getwd(),"outcome_table"),force = T, recursive = T)
+    obj$outcome_table = disk.frame::disk.frame(file.path(getwd(),"outcome_table"))
+  }
   
+  # obj$outcome_table = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$temporal_data, ~ dummy_outcome_variable(temporal_data = ., 
+  #                                                                                                                         outcome_var = outcome_var,
+  #                                                                                                                         window_size = obj$step, 
+  #                                                                                                                         outcome_stat = outcome_stat,
+  #                                                                                                                         lookahead = obj$lookahead
+  # ))) ,
+  # overwrite = TRUE,
+  # shardby = "encounter_id",
+  # backend = "data.table")
+  # 
+  # 
+  
+  outcome_call = disk.frame::map(obj$temporal_data, ~ wizard::dummy_outcome_variable(temporal_data = ., 
+                                                                             outcome_var = outcome_var,
+                                                                             window_size = obj$step, 
+                                                                             outcome_stat = outcome_stat,
+                                                                             lookahead = obj$lookahead,
+                                                                             obj = obj
+  ),lazy = F)
+  rm(outcome_call)
  
   
   obj
@@ -382,17 +472,22 @@ write_to = function(obj,write_file = NULL,most_recent){
   
   ## calling a function which will spread and merge the data.
   
+  if(!dir.exists(file.path(getwd(),"result_frame"))){
+    obj$result_frame = disk.frame::disk.frame(file.path(getwd(),"result_frame"))
+  }
+  else{
+    unlink(file.path(getwd(),"result_frame"),force = T,recursive = T)
+    obj$result_frame = disk.frame::disk.frame(file.path(getwd(),"result_frame"))
+  }
   
-  obj$wizard_frame = disk.frame::as.disk.frame(dplyr::collect(disk.frame::map(obj$wizard_frame, ~ wizard::final_spread_data(temporal_data = .,
-                                                                                                                           outcome_var = obj$outcome_var,
-                                                                                                                           all_variables_to_create = all_variables_to_create
-
-   ))),
-  overwrite = TRUE,
-  nchunks = 2,
-  shardby = "encounter_id",
-  backend = "data.table"
-  )
+  result_call = disk.frame::map(obj$wizard_frame, ~ wizard::final_spread_data(temporal_data = .,
+                                                                      outcome_var = obj$outcome_var,
+                                                                      all_variables_to_create = all_variables_to_create,
+                                                                      obj = obj
+  ),lazy = F)
+  obj$wizard_frame = obj$result_frame
+  obj$result_frame = NULL
+  rm(result_call)
 
   if(!is.null(obj$fixed_data)){
     if (class(obj$fixed_data)[1] == "character"){

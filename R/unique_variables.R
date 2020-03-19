@@ -13,6 +13,7 @@ unique_variables =  function (data){
     dplyr::group_by(variable) %>%
     dplyr::slice(1) %>%
     dplyr::ungroup() %>%
-    dplyr::select(variable,category)
+    dplyr::select(variable,category)%>% 
+    mutate_at(vars(variable,category),as.character)
 
 }
