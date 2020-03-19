@@ -8,9 +8,9 @@
 #' @return data frame
 #' @export
 
-date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, units)
+date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, units,obj)
 {
-
+  
   # if (tolower(class(lookback)[1]) == "period" & tolower(class(lookahead)[1]) == "period" & tolower(class(window_size)[1]) == "period"){
   # print("Got here")
   if(is.null(fixed_data)){
@@ -24,7 +24,7 @@ date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, 
       dplyr::inner_join(fixed_data %>%
                           dplyr::select(encounter_id, admit_time = time),
                         by ="encounter_id")
-
+    
     #dummy = final_data %>% filter(!is.na(time)) %>% filter(!is.na(admit_time)) %>% head()
   }
   else if(class(fixed_data)[[1]] %in% c("data.frame","tibble","disk.frame","data.table","tbl_df")){
@@ -37,12 +37,12 @@ date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, 
     # final_data %>% head() %>% View()
     #dummy = final_data %>% filter(!is.na(time)) %>% filter(!is.na(admit_time)) %>% head()
   }
-
-
+  
+  
   if (tolower(class(temporal_data$admit_time)[1]) %in% c("character","date","posixct") & tolower(class(temporal_data$time)[1]) %in% c("character","date","posixct") ){
     #print("did i")
     if(any(stringr::str_detect(temporal_data$admit_time,stringr::regex("-|/")) == TRUE) |any(stringr::str_detect(temporal_data$time,stringr::regex("-|/")) == TRUE)){
-
+      
       #final_data = final_data %>%
       temporal_data = temporal_data %>%
         dplyr::mutate(admit_time = lubridate::parse_date_time(admit_time, orders = c("ymd_HMS","dmy_HMS","mdy_HMS","ymd","mdy","dmy"))) %>%
@@ -50,8 +50,8 @@ date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, 
         #mutate(time = time_length(interval(admit_time,time), period_measure$units)) %>%
         dplyr::mutate(time = lubridate::time_length(lubridate::interval(admit_time,time),units)) %>%
         dplyr::select(-admit_time)
-
-     # print("ran")
+      
+      # print("ran")
     }
     else{
       stop("Please make sure if the data type of the time column in fixed dataframe is similar to that of temporal data frame")
@@ -75,7 +75,7 @@ date_to_time = function(temporal_data = temporal_data, fixed_data = fixed_data, 
   # else{
   #   stop("The data type of period parameters and the time variable of the data frame should be the same")
   # }
-
-  temporal_data
-
+  
+  disk.frame::add_chunk(obj$date_time,temporal_data)
+  rm(temporal_data)
 }
