@@ -70,7 +70,8 @@ check_mapper = function(.x,.y,window_size = list("meds" = 1,"labs" = 6), step = 
     check_first_frame = .x %>% 
      
       mutate(time = floor(time/temp_window_size)*temp_window_size) %>% 
-      filter(time <= min(time[which(time >= 0)]) & time >= -temp_lookback) %>% 
+      #filter(time <= min(time[which(time >= 0)]) & time >= -temp_lookback) %>% 
+      filter(time >=0) %>% 
       mutate(time = abs(time)) %>% 
       group_by(encounter_id,time,variable,max_time) %>% 
       summarise_each({{op}}, (value)) %>%  
